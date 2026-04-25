@@ -5,10 +5,7 @@ target/
 .kotlin
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -37,3 +34,12 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Fichiers de log
+*.log
+
+# Fichiers de base de données H2
+*.mv.db
+*.trace.db
+
+
