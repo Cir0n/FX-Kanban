@@ -12,6 +12,7 @@ public class UtilisateurRepository {
     private final String user = "sa";
     private final String password = "";
 
+    // Pour sauvegarder dans la base de données
     public void save(Utilisateur utilisateur) {
         
         String sql = "INSERT INTO utilisateur (pseudo, email, mot_de_passe) VALUES (?, ?, ?)";
@@ -25,13 +26,12 @@ public class UtilisateurRepository {
             pstmt.setString(3, utilisateur.getMotDePasse());
 
             pstmt.executeUpdate();
-            System.out.println("Utilisateur enregistré avec succès !");
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
+// Pour lire dans la base de données et donner le user qui correspond au email passé en paramètre
     public Utilisateur findByEmail(String email) {
         String sql = "SELECT id, pseudo, email, mot_de_passe FROM utilisateur WHERE email = ?";
 
@@ -54,7 +54,33 @@ public class UtilisateurRepository {
             e.printStackTrace();
         }
 
-        // Si on n'a rien trouvé, on retourne null
+        // Si on n'a rien trouvé HOPE LA > null
         return null;
+    }
+
+    public java.util.List<Utilisateur> findAll() {
+        java.util.List<Utilisateur> utilisateurs = new java.util.ArrayList<>();
+        String sql = "SELECT id, pseudo, email, mot_de_passe FROM utilisateur";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Long id = rs.getLong("id");
+                String pseudo = rs.getString("pseudo");
+                String email = rs.getString("email");
+                String motDePasse = rs.getString("mot_de_passe");
+
+                Utilisateur utilisateur = new Utilisateur(id, pseudo, email, motDePasse);
+                utilisateurs.add(utilisateur);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            }
+        return utilisateurs;
+
+
     }
 }
