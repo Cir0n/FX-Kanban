@@ -3,7 +3,7 @@ package fr.esgi.phil.kanban.repository;
 import fr.esgi.phil.kanban.model.Utilisateur;
 import java.util.Optional;
 
-public interface    UtilisateurRepository {
+public interface IUtilisateurRepository {
     Optional<Utilisateur> findById(Long id);
     Optional<Utilisateur> findByNickname(String nickname);
     boolean existsByNickname(String nickname);

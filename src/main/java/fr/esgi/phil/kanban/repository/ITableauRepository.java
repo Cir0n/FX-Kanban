@@ -5,7 +5,7 @@ import fr.esgi.phil.kanban.model.Utilisateur;
 import java.util.List;
 import java.util.Optional;
 
-public interface TableauRepository {
+public interface ITableauRepository {
     Optional<Tableau> findById(Long id);
     List<Tableau> findAllByContributeur(Long utilisateurId);
     Tableau save(Tableau tableau);
