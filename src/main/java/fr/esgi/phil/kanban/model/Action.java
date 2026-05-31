@@ -13,5 +13,6 @@ public class Action {
     private String description;
     private LocalDateTime createdAt;
     private Long utilisateurId;
+    private Long tacheId;
     private Long colonneId;
 }
