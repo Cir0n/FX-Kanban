@@ -1,4 +1,4 @@
-package fr.esgi.fx.kanban.configuration;
+package fr.esgi.phil.kanban.configuration;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -11,7 +11,7 @@ public class ThymeleafConfiguration implements ServletContextListener {
     private JakartaServletWebApplication application;
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        IO.println("Initialisation Thymeleaf");
+        System.out.println("Initialisation Thymeleaf");
         application = JakartaServletWebApplication.buildApplication(sce.getServletContext());
         TemplateEngine templateEngine = new TemplateEngine();
         WebApplicationTemplateResolver templateResolver = new
