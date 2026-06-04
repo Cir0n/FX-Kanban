@@ -23,10 +23,10 @@ public class TaskServlet extends HttpServlet {
         templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");
     }
 
-    @Override
     // la méthode doGet ci-dessous sera invoquée par Tomcat
     // Tomcat invoque cette méthode car elle prend en charge toutes
     // les requêtes HTTP utilisant la méthode GET vers l'url signIn
+    @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // On crée un context Thymeleaf qui va accueillir les objets Java
         // qui seront envoyés à la vue Thymeleaf
