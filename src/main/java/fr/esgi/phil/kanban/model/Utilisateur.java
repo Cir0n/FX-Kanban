@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Utilisateur {
     private Long id;
-    private String nickname;
+    private String pseudo;
     private String email;
     private String password;
     private LocalDateTime createdAt;

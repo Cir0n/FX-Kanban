@@ -7,10 +7,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Tableau {
+public class PieceJointe {
     private Long id;
-    private String name;
+    private String nomFichier;
+    private String mimeType;
+    private byte[] contenu;
     private LocalDateTime createdAt;
-    private Long createdBy;
-    private String stripeSessionId;
+    private Long tacheId;
 }

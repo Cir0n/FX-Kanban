@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Action {
     private Long id;
-    private String action;
     private String description;
     private LocalDateTime createdAt;
-    private Long utilisateurId;
     private Long tacheId;
-    private Long colonneId;
+    private Long utilisateurId;
+    private Long colonneSourceId;
+    private Long colonneCibleId;
 }

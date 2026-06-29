@@ -27,8 +27,8 @@ public class UtilisateurServiceImpl implements IUtilisateurService {
     }
 
     @Override
-    public Utilisateur inscrire(String nickname, String email, String password) {
-        if (utilisateurRepository.existsByNickname(nickname)) {
+    public Utilisateur inscrire(String pseudo, String email, String password) {
+        if (utilisateurRepository.existsByPseudo(pseudo)) {
             throw new IllegalArgumentException("Ce pseudo est déjà utilisé");
         }
         if (utilisateurRepository.existsByEmail(email)) {
@@ -38,7 +38,7 @@ public class UtilisateurServiceImpl implements IUtilisateurService {
             throw new IllegalArgumentException("Le mot de passe doit comporter au moins 8 caractères");
         }
         Utilisateur utilisateur = Utilisateur.builder()
-                .nickname(nickname)
+                .pseudo(pseudo)
                 .email(email)
                 .password(hashPassword(password))
                 .createdAt(LocalDateTime.now())
@@ -47,8 +47,8 @@ public class UtilisateurServiceImpl implements IUtilisateurService {
     }
 
     @Override
-    public Utilisateur connecter(String nickname, String password) {
-        Utilisateur utilisateur = utilisateurRepository.findByNickname(nickname)
+    public Utilisateur connecter(String pseudo, String password) {
+        Utilisateur utilisateur = utilisateurRepository.findByPseudo(pseudo)
                 .orElseThrow(() -> new IllegalArgumentException("Pseudo ou mot de passe incorrect"));
         if (!verifierPassword(password, utilisateur.getPassword())) {
             throw new IllegalArgumentException("Pseudo ou mot de passe incorrect");

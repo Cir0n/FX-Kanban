@@ -5,8 +5,8 @@ import java.util.Optional;
 
 public interface IUtilisateurRepository {
     Optional<Utilisateur> findById(Long id);
-    Optional<Utilisateur> findByNickname(String nickname);
-    boolean existsByNickname(String nickname);
+    Optional<Utilisateur> findByPseudo(String pseudo);
+    boolean existsByPseudo(String pseudo);
     boolean existsByEmail(String email);
     Utilisateur save(Utilisateur utilisateur);
 }
