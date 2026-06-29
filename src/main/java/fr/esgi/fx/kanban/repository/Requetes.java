@@ -15,6 +15,14 @@ public final class Requetes {
             "SELECT COUNT(*) FROM utilisateur WHERE pseudo = ?";
     public static final String EXISTS_UTILISATEUR_BY_EMAIL =
             "SELECT COUNT(*) FROM utilisateur WHERE email = ?";
+    public static final String FIND_UTILISATEUR_BY_EMAIL =
+            "SELECT id, pseudo, email, password, created_at FROM utilisateur WHERE email = ?";
+    public static final String FIND_ALL_UTILISATEURS =
+            "SELECT id, pseudo, email, password, created_at FROM utilisateur";
+    public static final String UPDATE_UTILISATEUR =
+            "UPDATE utilisateur SET pseudo = ?, email = ?, password = ? WHERE id = ?";
+    public static final String DELETE_UTILISATEUR =
+            "DELETE FROM utilisateur WHERE id = ?";
 
     // --- Tableau ---
     public static final String INSERT_TABLEAU =
@@ -41,6 +49,8 @@ public final class Requetes {
             "INSERT INTO colonne (name, position, tableau_id) VALUES (?, ?, ?)";
     public static final String FIND_COLONNE_BY_ID =
             "SELECT id, name, position, tableau_id FROM colonne WHERE id = ?";
+    public static final String FIND_ALL_COLONNES =
+            "SELECT id, name, position, tableau_id FROM colonne ORDER BY tableau_id, position";
     public static final String FIND_COLONNES_BY_TABLEAU =
             "SELECT id, name, position, tableau_id FROM colonne WHERE tableau_id = ? ORDER BY position";
 
@@ -55,6 +65,8 @@ public final class Requetes {
     // --- Tâche ---
     public static final String INSERT_TACHE =
             "INSERT INTO tache (name, description, colonne_id, type_id, created_by, utilisateur_id) VALUES (?, ?, ?, ?, ?, ?)";
+    public static final String FIND_ALL_TACHES =
+            "SELECT id, name, description, created_at, colonne_id, type_id, created_by, utilisateur_id FROM tache";
     public static final String FIND_TACHE_BY_ID =
             "SELECT id, name, description, created_at, colonne_id, type_id, created_by, utilisateur_id FROM tache WHERE id = ?";
     public static final String FIND_TACHES_BY_COLONNE =

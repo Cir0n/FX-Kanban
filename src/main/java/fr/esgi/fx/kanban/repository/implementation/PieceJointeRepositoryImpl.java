@@ -1,9 +1,9 @@
 package fr.esgi.fx.kanban.repository.implementation;
 
-import fr.esgi.phil.kanban.model.PieceJointe;
-import fr.esgi.phil.kanban.repository.ConnectionManager;
-import fr.esgi.phil.kanban.repository.IPieceJointeRepository;
-import fr.esgi.phil.kanban.repository.Requetes;
+import fr.esgi.fx.kanban.model.PieceJointe;
+import fr.esgi.fx.kanban.repository.ConnectionManager;
+import fr.esgi.fx.kanban.repository.IPieceJointeRepository;
+import fr.esgi.fx.kanban.repository.Requetes;
 
 import java.sql.*;
 import java.util.ArrayList;

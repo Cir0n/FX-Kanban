@@ -1,9 +1,9 @@
 package fr.esgi.fx.kanban.repository.implementation;
 
-import fr.esgi.fx2.kanban.model.Tache;
-import fr.esgi.fx2.kanban.repository.ConnectionManager;
-import fr.esgi.fx2.kanban.repository.ITacheRepository;
-import fr.esgi.fx2.kanban.repository.Requetes;
+import fr.esgi.fx.kanban.model.Tache;
+import fr.esgi.fx.kanban.repository.ConnectionManager;
+import fr.esgi.fx.kanban.repository.ITacheRepository;
+import fr.esgi.fx.kanban.repository.Requetes;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -56,6 +56,22 @@ public class TacheRepositoryImpl implements ITacheRepository {
             throw new RuntimeException("Erreur lors de la recherche de la tâche", e);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public List<Tache> findAll() {
+        List<Tache> taches = new ArrayList<>();
+        try (Connection conn = ConnectionManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(Requetes.FIND_ALL_TACHES)) {
+
+            while (rs.next()) {
+                taches.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la récupération des tâches", e);
+        }
+        return taches;
     }
 
     @Override

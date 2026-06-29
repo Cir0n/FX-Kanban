@@ -1,6 +1,6 @@
 package fr.esgi.fx.kanban.repository;
 
-import fr.esgi.phil.kanban.model.PieceJointe;
+import fr.esgi.fx.kanban.model.PieceJointe;
 import java.util.List;
 
 public interface IPieceJointeRepository {

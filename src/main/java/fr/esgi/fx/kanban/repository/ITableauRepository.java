@@ -1,7 +1,7 @@
 package fr.esgi.fx.kanban.repository;
 
-import fr.esgi.phil.kanban.model.Tableau;
-import fr.esgi.phil.kanban.model.Utilisateur;
+import fr.esgi.fx.kanban.model.Tableau;
+import fr.esgi.fx.kanban.model.Utilisateur;
 import java.util.List;
 import java.util.Optional;
 

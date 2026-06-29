@@ -1,6 +1,6 @@
 package fr.esgi.fx.kanban.service;
 
-import fr.esgi.phil.kanban.model.Colonne;
+import fr.esgi.fx.kanban.model.Colonne;
 import java.util.List;
 
 public interface IColonneService {

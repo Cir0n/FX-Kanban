@@ -1,9 +1,9 @@
 package fr.esgi.fx.kanban.repository.implementation;
 
-import fr.esgi.phil.kanban.model.Colonne;
-import fr.esgi.phil.kanban.repository.ConnectionManager;
-import fr.esgi.phil.kanban.repository.IColonneRepository;
-import fr.esgi.phil.kanban.repository.Requetes;
+import fr.esgi.fx.kanban.model.Colonne;
+import fr.esgi.fx.kanban.repository.ConnectionManager;
+import fr.esgi.fx.kanban.repository.IColonneRepository;
+import fr.esgi.fx.kanban.repository.Requetes;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -49,6 +49,22 @@ public class ColonneRepositoryImpl implements IColonneRepository {
             throw new RuntimeException("Erreur lors de la recherche de la colonne", e);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public List<Colonne> findAll() {
+        List<Colonne> colonnes = new ArrayList<>();
+        try (Connection conn = ConnectionManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(Requetes.FIND_ALL_COLONNES)) {
+
+            while (rs.next()) {
+                colonnes.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erreur lors de la récupération des colonnes", e);
+        }
+        return colonnes;
     }
 
     @Override

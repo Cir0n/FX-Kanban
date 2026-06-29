@@ -1,6 +1,6 @@
 package fr.esgi.fx.kanban.service;
 
-import fr.esgi.phil.kanban.model.TypeDeTache;
+import fr.esgi.fx.kanban.model.TypeDeTache;
 import java.util.List;
 import java.util.Optional;
 

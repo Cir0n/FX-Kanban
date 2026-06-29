@@ -1,6 +1,6 @@
 package fr.esgi.fx.kanban.service;
 
-import fr.esgi.phil.kanban.model.Action;
+import fr.esgi.fx.kanban.model.Action;
 import java.util.List;
 
 public interface IActionService {

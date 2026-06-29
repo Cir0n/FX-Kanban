@@ -1,9 +1,9 @@
 package fr.esgi.fx.kanban.repository.implementation;
 
-import fr.esgi.phil.kanban.model.Commentaire;
-import fr.esgi.phil.kanban.repository.ConnectionManager;
-import fr.esgi.phil.kanban.repository.ICommentaireRepository;
-import fr.esgi.phil.kanban.repository.Requetes;
+import fr.esgi.fx.kanban.model.Commentaire;
+import fr.esgi.fx.kanban.repository.ConnectionManager;
+import fr.esgi.fx.kanban.repository.ICommentaireRepository;
+import fr.esgi.fx.kanban.repository.Requetes;
 
 import java.sql.*;
 import java.util.ArrayList;

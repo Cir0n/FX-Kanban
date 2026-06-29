@@ -1,6 +1,6 @@
 package fr.esgi.fx.kanban.service;
 
-import fr.esgi.phil.kanban.model.Tache;
+import fr.esgi.fx.kanban.model.Tache;
 
 public interface ITacheService {
     Tache creer(String name, String description, Long colonneId, Long typeId, Long utilisateurId);

@@ -1,6 +1,6 @@
 package fr.esgi.fx.kanban.repository;
 
-import fr.esgi.phil.kanban.model.Action;
+import fr.esgi.fx.kanban.model.Action;
 import java.util.List;
 
 public interface IActionRepository {

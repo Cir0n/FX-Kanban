@@ -1,8 +1,8 @@
 package fr.esgi.fx.kanban.service.implementation;
 
-import fr.esgi.phil.kanban.model.Utilisateur;
-import fr.esgi.phil.kanban.repository.IUtilisateurRepository;
-import fr.esgi.phil.kanban.service.IUtilisateurService;
+import fr.esgi.fx.kanban.model.Utilisateur;
+import fr.esgi.fx.kanban.repository.IUtilisateurRepository;
+import fr.esgi.fx.kanban.service.IUtilisateurService;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
