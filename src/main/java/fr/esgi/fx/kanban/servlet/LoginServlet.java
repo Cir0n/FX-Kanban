@@ -1,99 +1,98 @@
 package fr.esgi.fx.kanban.servlet;
 
-import java.io.IOException;
-import java.util.Optional;
-
-import fr.esgi.fx.kanban.model.User;
-import fr.esgi.fx.kanban.repository.UserRepository;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.WebServlet;
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.web.IWebExchange;
+import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
-@WebServlet(name = "LoginServlet", value = {"/logIn", "/"})
+import java.io.IOException;
+
+@WebServlet(name = "loginServlet", value = {"/login"})
 public class LoginServlet extends HttpServlet {
 
-    private TemplateEngine templateEngine = null;
-    private final UserRepository userRepository = UserRepository.getInstance();
+    private TemplateEngine templateEngine;
+    private JakartaServletWebApplication application;
 
     @Override
     public void init() {
-        System.out.println("Initialisation de la servlet LoginServlet");
+        System.out.println("hello from LongServlet");
         templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");
+        application = JakartaServletWebApplication.buildApplication(getServletContext());
     }
 
-    /**
-     * GET /logIn — Affiche le formulaire de connexion.
-     * Si l'utilisateur est déjà connecté, redirige vers le tableau.
-     */
+    // Les expressions de lien @{/...} de Thymeleaf 3.1 exigent un WebContext.
+    private WebContext newContext(HttpServletRequest request, HttpServletResponse response) {
+        IWebExchange exchange = application.buildExchange(request, response);
+        return new WebContext(exchange);
+    }
+
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Si déjà connecté, rediriger vers le tableau
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // Si déjà connecté, rediriger vers le dashboard
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
-            response.sendRedirect(request.getContextPath() + "/tableau/1");
+            response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
 
-        Context context = new Context();
+        WebContext context = newContext(request, response);
 
-        // Récupérer un éventuel message de succès (ex: après inscription)
+        // Message de succès après inscription
         String success = request.getParameter("success");
         if (success != null) {
-            context.setVariable("success", "Inscription réussie ! Vous pouvez maintenant vous connecter.");
+            context.setVariable("success", "Inscription réussie ! Vous pouvez vous connecter.");
         }
 
         response.setContentType("text/html;charset=UTF-8");
         templateEngine.process("login", context, response.getWriter());
     }
 
-    /**
-     * POST /logIn — Traite le formulaire de connexion.
-     * Vérifie les identifiants et crée une session HTTP si valides.
-     */
     @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding("UTF-8");
-
-        String name = request.getParameter("name");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String pseudo = request.getParameter("pseudo");
         String password = request.getParameter("password");
 
-        Context context = new Context();
+        WebContext context = newContext(request, response);
+        boolean hasError = false;
 
-        // Validation des champs
-        if (name == null || name.isBlank() || password == null || password.isBlank()) {
-            context.setVariable("error", "Veuillez remplir tous les champs.");
-            context.setVariable("name", name);
+        // Validation
+        if (pseudo == null || pseudo.trim().isEmpty()) {
+            context.setVariable("pseudoError", "Le pseudo est requis.");
+            hasError = true;
+        }
+
+        if (password == null || password.trim().isEmpty()) {
+            context.setVariable("passwordError", "Le mot de passe est requis.");
+            hasError = true;
+        }
+
+        if (hasError) {
+            context.setVariable("pseudo", pseudo);
             response.setContentType("text/html;charset=UTF-8");
             templateEngine.process("login", context, response.getWriter());
             return;
         }
 
-        // Recherche de l'utilisateur
-        Optional<User> optionalUser = userRepository.findByName(name.trim());
+        // TODO : Remplacer par userService.authenticate(pseudo, password)
+        // Faux utilisateurs pour le développement
+        boolean authenticated = ("jean.d".equals(pseudo) && "password123".equals(password))
+                || ("alice.m".equals(pseudo) && "password123".equals(password))
+                || ("tom.l".equals(pseudo) && "password123".equals(password));
 
-        if (optionalUser.isEmpty() || !optionalUser.get().getPassword().equals(password)) {
+        if (authenticated) {
+            HttpSession session = request.getSession(true);
+            session.setAttribute("user", pseudo);
+            response.sendRedirect(request.getContextPath() + "/dashboard");
+        } else {
             context.setVariable("error", "Pseudo ou mot de passe incorrect.");
-            context.setVariable("name", name);
+            context.setVariable("pseudo", pseudo);
             response.setContentType("text/html;charset=UTF-8");
             templateEngine.process("login", context, response.getWriter());
-            return;
         }
-
-        // Connexion réussie : créer la session
-        User user = optionalUser.get();
-        HttpSession session = request.getSession(true);
-        session.setAttribute("user", user);
-        session.setMaxInactiveInterval(30 * 60); // 30 minutes
-
-        // Redirection vers le tableau principal
-        response.sendRedirect(request.getContextPath() + "/tableau/1");
-    }
-
-    @Override
-    public void destroy() {
     }
 }

@@ -19,8 +19,10 @@ public class ThymeleafConfiguration implements ServletContextListener {
         templateResolver.setTemplateMode(TemplateMode.HTML);
         templateResolver.setPrefix("/WEB-INF/templates/");
         templateResolver.setSuffix(".html");
-        templateResolver.setCacheTTLMs(Long.valueOf(3600000L));
-        templateResolver.setCacheable(true);
+        // En développement : cache désactivé pour que les modifications de templates
+        // soient prises en compte sans redémarrer le serveur.
+        // En production, repasser à setCacheable(true) (+ un TTL) pour les performances.
+        templateResolver.setCacheable(false);
         templateEngine.setTemplateResolver(templateResolver);
         sce.getServletContext().setAttribute("templateEngine", templateEngine);
     }
