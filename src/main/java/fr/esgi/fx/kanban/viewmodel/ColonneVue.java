@@ -12,5 +12,4 @@ public class ColonneVue {
     private Long id;
     private String name;
     private List<TacheVue> taches;
-    test
 }
