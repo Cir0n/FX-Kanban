@@ -1,4 +1,4 @@
-package fr.esgi.phil.kanban.stripe;
+package fr.esgi.fx.kanban.stripe;
 
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;

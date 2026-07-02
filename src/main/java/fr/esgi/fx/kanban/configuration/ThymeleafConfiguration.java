@@ -1,4 +1,4 @@
-package fr.esgi.phil.kanban.configuration;
+package fr.esgi.fx.kanban.configuration;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;

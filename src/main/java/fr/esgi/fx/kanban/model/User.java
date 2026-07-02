@@ -1,4 +1,4 @@
-package fr.esgi.phil.kanban.model;
+package fr.esgi.fx.kanban.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

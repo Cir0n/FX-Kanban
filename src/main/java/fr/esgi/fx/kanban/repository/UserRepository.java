@@ -1,6 +1,6 @@
-package fr.esgi.phil.kanban.repository;
+package fr.esgi.fx.kanban.repository;
 
-import fr.esgi.phil.kanban.model.User;
+import fr.esgi.fx.kanban.model.User;
 
 import java.util.Map;
 import java.util.Optional;

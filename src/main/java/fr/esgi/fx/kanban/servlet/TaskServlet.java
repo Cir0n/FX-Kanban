@@ -1,4 +1,4 @@
-package fr.esgi.phil.kanban.servlet;
+package fr.esgi.fx.kanban.servlet;
 
 import java.io.IOException;
 

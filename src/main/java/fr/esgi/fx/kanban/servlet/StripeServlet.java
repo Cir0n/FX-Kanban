@@ -1,10 +1,10 @@
-package fr.esgi.phil.kanban.servlet;
+package fr.esgi.fx.kanban.servlet;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
-import fr.esgi.phil.kanban.stripe.StripeService;
+import fr.esgi.fx.kanban.stripe.StripeService;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

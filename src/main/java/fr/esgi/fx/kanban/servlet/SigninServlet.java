@@ -1,9 +1,9 @@
-package fr.esgi.phil.kanban.servlet;
+package fr.esgi.fx.kanban.servlet;
 
 import java.io.IOException;
 
-import fr.esgi.phil.kanban.model.User;
-import fr.esgi.phil.kanban.repository.UserRepository;
+import fr.esgi.fx.kanban.model.User;
+import fr.esgi.fx.kanban.repository.UserRepository;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;

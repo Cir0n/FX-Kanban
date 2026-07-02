@@ -1,6 +1,6 @@
-package fr.esgi.phil.kanban.configuration;
+package fr.esgi.fx.kanban.configuration;
 
-import fr.esgi.phil.kanban.stripe.StripeService;
+import fr.esgi.fx.kanban.stripe.StripeService;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
