@@ -37,3 +37,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Fichiers de log
+*.log
+
+# Fichiers de base de données H2
+*.mv.db
+*.trace.db
