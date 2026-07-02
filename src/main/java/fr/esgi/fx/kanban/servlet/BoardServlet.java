@@ -1,9 +1,9 @@
-package fr.esgi.phil.kanban.servlet;
+package fr.esgi.fx.kanban.servlet;
 
-import fr.esgi.phil.kanban.viewmodel.ColonneVue;
-import fr.esgi.phil.kanban.viewmodel.CommentaireVue;
-import fr.esgi.phil.kanban.viewmodel.MembreVue;
-import fr.esgi.phil.kanban.viewmodel.TacheVue;
+import fr.esgi.fx.kanban.viewmodel.ColonneVue;
+import fr.esgi.fx.kanban.viewmodel.CommentaireVue;
+import fr.esgi.fx.kanban.viewmodel.MembreVue;
+import fr.esgi.fx.kanban.viewmodel.TacheVue;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

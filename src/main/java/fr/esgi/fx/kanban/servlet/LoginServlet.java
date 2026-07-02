@@ -1,4 +1,4 @@
-package fr.esgi.phil.kanban.servlet;
+package fr.esgi.fx.kanban.servlet;
 
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
