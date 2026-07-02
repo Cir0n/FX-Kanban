@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Kanban — ' + ${boardName}">Kanban — Tableau</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link th:href="@{/styles/common.css(v=${#dates.createNow().time})}" rel="stylesheet">
+    <link th:href="@{/styles/board.css(v=${#dates.createNow().time})}" rel="stylesheet">
+</head>
+<body class="app-page">
+
+<!-- Barre de navigation -->
+<nav class="navbar-kanban">
+    <a th:href="@{/dashboard}" class="logo logo-md" style="text-decoration: none;">
+        <span class="logo-k">K</span>anban
+    </a>
+
+    <div class="navbar-right">
+        <button class="bell" type="button" aria-label="Notifications">
+            <svg viewBox="0 0 24 24">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="bell-dot"></span>
+        </button>
+
+        <span class="avatar avatar-xl" style="background: var(--primary);"
+              th:text="${userInitiales}">JD</span>
+        <span class="navbar-username" th:text="${user}">jean.d</span>
+
+        <a th:href="@{/logout}" class="navbar-logout">Déconnexion</a>
+    </div>
+</nav>
+
+<!-- Contenu -->
+<main class="page-container page-container-wide">
+
+    <!-- Fil d'ariane -->
+    <a th:href="@{/dashboard}" class="back-link">← Mes tableaux</a>
+
+    <!-- Confirmation de création -->
+    <div th:if="${created}" class="alert-success">La tâche a bien été ajoutée.</div>
+
+    <!-- En-tête du tableau -->
+    <div class="board-header">
+        <div class="board-header-title">
+            <span class="board-color-dot" th:style="'background: ' + ${boardCouleur}"></span>
+            <h1 class="page-title" th:text="${boardName}">Nom du tableau</h1>
+        </div>
+
+        <div class="board-header-right">
+            <!-- Légende des types de tâche -->
+            <div class="legend">
+                <span class="legend-item"><span class="legend-dot" style="background: var(--type-standard)"></span>Standard</span>
+                <span class="legend-item"><span class="legend-dot" style="background: var(--type-bug)"></span>Bug</span>
+                <span class="legend-item"><span class="legend-dot" style="background: var(--type-spike)"></span>Spike</span>
+                <span class="legend-item"><span class="legend-dot" style="background: var(--type-amelio)"></span>Amélioration</span>
+            </div>
+
+            <!-- Membres du tableau -->
+            <div class="avatar-stack">
+                <span th:each="membre : ${membres}"
+                      class="avatar avatar-lg"
+                      th:style="'background: ' + ${membre.couleur}"
+                      th:text="${membre.initiales}">JD</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Colonnes Kanban -->
+    <div class="kanban-board">
+
+        <div th:each="colonne : ${colonnes}" class="kanban-column">
+
+            <div class="kanban-column-header">
+                <span class="kanban-column-title" th:text="${colonne.name}">À faire</span>
+                <span class="kanban-column-count" th:text="${#lists.size(colonne.taches)}">0</span>
+            </div>
+
+            <div class="kanban-column-tasks">
+
+                <!-- Une carte par tâche -->
+                <div th:each="tache : ${colonne.taches}"
+                     class="task-card"
+                     th:classappend="'task-card-' + ${tache.typeClasse}"
+                     th:attr="data-modal-target='modal-' + ${tache.id}">
+
+                    <div class="task-card-head">
+                        <span class="badge-type"
+                              th:classappend="'badge-' + ${tache.typeClasse}"
+                              th:text="${tache.typeLabel}">Standard</span>
+                    </div>
+
+                    <div class="task-card-name" th:text="${tache.name}">Nom de la tâche</div>
+                    <div class="task-card-desc" th:text="${tache.description}">Description.</div>
+
+                    <div class="task-card-footer">
+                        <div class="task-card-assignee" th:if="${tache.assignee != null}">
+                            <span class="avatar avatar-sm"
+                                  th:style="'background: ' + ${tache.assignee.couleur}"
+                                  th:text="${tache.assignee.initiales}">JD</span>
+                        </div>
+
+                        <div class="task-card-icons">
+                            <span class="task-card-icon" th:if="${!#lists.isEmpty(tache.commentaires)}">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                                     stroke="currentColor" stroke-width="1.7">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                <span th:text="${#lists.size(tache.commentaires)}">0</span>
+                            </span>
+                            <span class="task-card-icon" th:if="${tache.pieceJointeNom != null}">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+                                     stroke="currentColor" stroke-width="1.7">
+                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modale de détail de la tâche -->
+                <div th:each="tache : ${colonne.taches}"
+                     class="modal-overlay"
+                     th:id="'modal-' + ${tache.id}" hidden>
+                    <div class="task-modal" role="dialog" aria-modal="true"
+                         th:aria-label="${tache.name}">
+
+                        <div class="task-modal-header">
+                            <div>
+                                <span class="badge-type"
+                                      th:classappend="'badge-' + ${tache.typeClasse}"
+                                      th:text="${tache.typeLabel}">Standard</span>
+                                <h2 class="task-modal-title" th:text="${tache.name}">Nom de la tâche</h2>
+                            </div>
+                            <button type="button" class="modal-close" data-modal-close
+                                    aria-label="Fermer">&times;</button>
+                        </div>
+
+                        <div class="task-modal-body">
+
+                            <div class="modal-meta" th:if="${tache.assignee != null}">
+                                <div class="meta-item">
+                                    <span class="avatar avatar-md"
+                                          th:style="'background: ' + ${tache.assignee.couleur}"
+                                          th:text="${tache.assignee.initiales}">JD</span>
+                                    <span>Assigné à <strong th:text="${tache.assignee.initiales}">JD</strong></span>
+                                </div>
+                            </div>
+
+                            <div class="modal-section">
+                                <div class="modal-section-title">Description</div>
+                                <p class="modal-desc" th:text="${tache.description}">Description.</p>
+                            </div>
+
+                            <div class="modal-section" th:if="${tache.pieceJointeNom != null}">
+                                <div class="modal-section-title">Pièce jointe</div>
+                                <span class="attachment-chip">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                         stroke="currentColor" stroke-width="1.7">
+                                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                    </svg>
+                                    <span th:text="${tache.pieceJointeNom}">fichier.pdf</span>
+                                </span>
+                            </div>
+
+                            <div class="modal-section">
+                                <div class="modal-section-title">
+                                    Commentaires (<span th:text="${#lists.size(tache.commentaires)}">0</span>)
+                                </div>
+
+                                <p class="modal-empty" th:if="${#lists.isEmpty(tache.commentaires)}">
+                                    Aucun commentaire pour l'instant.
+                                </p>
+
+                                <div th:each="c : ${tache.commentaires}" class="comment">
+                                    <span class="avatar avatar-md"
+                                          th:style="'background: ' + ${c.couleur}"
+                                          th:text="${c.initiales}">JD</span>
+                                    <div class="comment-body">
+                                        <div>
+                                            <span class="comment-author" th:text="${c.auteur}">jean.d</span>
+                                            <span class="comment-date" th:text="${c.date}">2 juil.</span>
+                                        </div>
+                                        <div class="comment-content" th:text="${c.content}">Contenu.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Ouvre la modale d'ajout de tâche, pré-scopée sur cette colonne -->
+            <button type="button" class="add-task"
+                    th:attr="data-colonne-id=${colonne.id}, data-colonne-name=${colonne.name}">
+                + Ajouter une tâche
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Modale : ajout d'une tâche (partagée, pré-remplie par colonne via JS) -->
+    <div class="modal-overlay" id="modal-add-task" hidden>
+        <div class="task-modal" role="dialog" aria-modal="true" aria-label="Nouvelle tâche">
+
+            <div class="task-modal-header">
+                <div>
+                    <h2 class="task-modal-title">Ajouter une tâche</h2>
+                    <p class="task-modal-sub">Colonne : <strong id="addTaskColonneName">À faire</strong></p>
+                </div>
+                <button type="button" class="modal-close" data-modal-close aria-label="Fermer">&times;</button>
+            </div>
+
+            <div class="task-modal-body">
+                <form id="addTaskForm" th:action="@{/task/new}" method="post" novalidate>
+
+                    <input type="hidden" name="boardId" th:value="${boardId}">
+                    <input type="hidden" name="colonneId" id="addTaskColonneId">
+
+                    <div class="mb-3">
+                        <label for="taskName" class="form-label">Nom de la tâche</label>
+                        <input type="text" class="form-control" id="taskName" name="name"
+                               placeholder="Ex. Corriger le bug de connexion"
+                               maxlength="120" required style="width: 100%;">
+                        <div class="invalid-feedback">Le nom de la tâche est requis.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="taskDesc" class="form-label">Description</label>
+                        <textarea class="form-control form-textarea" id="taskDesc" name="description"
+                                  rows="3" placeholder="Décrivez la tâche…" style="width: 100%;"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="mb-3" style="flex: 1;">
+                            <label for="taskType" class="form-label">Type</label>
+                            <select class="form-control form-select-kanban" id="taskType" name="type"
+                                    style="width: 100%;">
+                                <option value="standard">Standard</option>
+                                <option value="bug">Bug</option>
+                                <option value="spike">Spike</option>
+                                <option value="amelio">Amélioration</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" style="flex: 1;">
+                            <label for="taskAssignee" class="form-label">Assigné à</label>
+                            <select class="form-control form-select-kanban" id="taskAssignee" name="assignee"
+                                    style="width: 100%;">
+                                <option value="">Personne</option>
+                                <option th:each="m : ${membres}"
+                                        th:value="${m.initiales}"
+                                        th:text="${m.initiales}">JD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-outline-kanban" data-modal-close>Annuler</button>
+                        <button type="submit" class="btn-primary-kanban"
+                                style="width: auto; padding: 0 28px;">Créer la tâche</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<script th:src="@{/javascript/kanban.js(v=${#dates.createNow().time})}"></script>
+</body>
+</html>

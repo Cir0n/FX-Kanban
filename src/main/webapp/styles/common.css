@@ -1,0 +1,419 @@
+:root {
+    /* Marque */
+    --primary: #475569;
+    --primary-hover: #334155;
+    --stripe: #635BFF;
+
+    /* Fonds */
+    --bg-page: #F1F5F9;
+    --bg-card: #FFFFFF;
+    --bg-secondary: #F8FAFC;
+    --bg-tertiary: #F1F5F9;
+
+    /* Textes */
+    --text-primary: #0F172A;
+    --text-secondary: #64748B;
+    --text-tertiary: #94A3B8;
+
+    /* Bordures */
+    --border: #E2E8F0;
+
+    /* Sémantique */
+    --danger: #E24B4A;
+    --danger-bg: #FCEBEB;
+    --danger-text: #A32D2D;
+    --success: #1D9E75;
+    --success-bg: #E1F5EE;
+    --success-text: #0F6E56;
+
+    /* Types de tâche */
+    --type-standard: #378ADD;
+    --type-standard-bg: #E6F1FB;
+    --type-standard-text: #185FA5;
+    --type-bug: #E24B4A;
+    --type-bug-bg: #FCEBEB;
+    --type-bug-text: #A32D2D;
+    --type-spike: #BA7517;
+    --type-spike-bg: #FAEEDA;
+    --type-spike-text: #854F0B;
+    --type-amelio: #1D9E75;
+    --type-amelio-bg: #E1F5EE;
+    --type-amelio-text: #0F6E56;
+
+    /* Rayons */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+}
+
+/* ── Base ────────────────────────────────────── */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* ── Logo ────────────────────────────────────── */
+.logo {
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.logo-k {
+    color: var(--primary);
+}
+
+.logo-md {
+    font-size: 22px;
+}
+
+.logo-sm {
+    font-size: 20px;
+}
+
+/* ── Formulaires ─────────────────────────────── */
+.form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary);
+    margin-bottom: 6px;
+}
+
+.form-control {
+    height: 48px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control::placeholder {
+    color: var(--text-tertiary);
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.12);
+    outline: none;
+}
+
+.form-control.is-invalid {
+    border-color: var(--danger);
+}
+
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(226, 75, 74, 0.12);
+}
+
+.invalid-feedback {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.field-hint {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+/* ── Boutons ─────────────────────────────────── */
+.btn-primary-kanban {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: var(--primary);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-primary-kanban:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-primary-kanban:active {
+    transform: scale(0.99);
+}
+
+.btn-outline-kanban {
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.btn-outline-kanban:hover {
+    border-color: var(--text-tertiary);
+}
+
+.btn-stripe {
+    height: 52px;
+    border: none;
+    border-radius: var(--radius-md);
+    background-color: var(--stripe);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-stripe:hover {
+    opacity: 0.9;
+}
+
+.btn-danger-kanban {
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--danger);
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+}
+
+/* ── Actions de formulaire (board-new, modale board) ── */
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+/* ── Alertes ─────────────────────────────────── */
+.alert-error {
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
+    border: 1px solid #F09595;
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.alert-success {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+    border: 1px solid #5DCAA5;
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* ──pages application (dashboard, board, board-new) ── */
+.app-page {
+    background-color: var(--bg-page);
+    min-height: 100vh;
+}
+
+.page-container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+.page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+}
+
+.page-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* ── Navbar ──────────────────────────────────── */
+.navbar-kanban {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 64px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.navbar-username {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.navbar-logout {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-decoration: none;
+}
+
+.navbar-logout:hover {
+    color: var(--primary);
+}
+
+/* ── Avatar ──────────────────────────────────── */
+.avatar {
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.avatar-xl { width: 40px; height: 40px; font-size: 15px; }
+.avatar-lg { width: 32px; height: 32px; font-size: 12px; }
+.avatar-md { width: 28px; height: 28px; font-size: 10px; }
+.avatar-sm { width: 24px; height: 24px; font-size: 9px; }
+.avatar-xs { width: 20px; height: 20px; font-size: 8px; }
+
+.avatar-stack {
+    display: flex;
+}
+
+.avatar-stack .avatar {
+    margin-left: -6px;
+    border: 2px solid var(--bg-card);
+}
+
+.avatar-stack .avatar:first-child {
+    margin-left: 0;
+}
+
+/* ── Cloche notification ─────────────────────── */
+.bell {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    border: none;
+}
+
+.bell:hover {
+    background: var(--bg-tertiary);
+}
+
+.bell svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--text-secondary);
+    fill: none;
+    stroke-width: 1.5;
+}
+
+.bell-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: var(--danger);
+    border-radius: 50%;
+    border: 2px solid var(--bg-card);
+}
+
+/* ── Badge rôle ──────────────────────────────── */
+.badge-role {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+/* ── Lien retour (board, board-new) ──────────── */
+.back-link {
+    display: inline-block;
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-bottom: 16px;
+    transition: color 0.15s;
+}
+
+.back-link:hover {
+    color: var(--primary);
+}
+
+/* ── Stripe block ────────────────────────────── */
+.stripe-block {
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.stripe-badge {
+    background: var(--stripe);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.stripe-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.stripe-price {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-top: 6px;
+}
+
+/* ── Utilitaires ─────────────────────────────── */
+.text-primary   { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary  { color: var(--text-tertiary); }
+.text-danger    { color: var(--danger); }
+.bg-page        { background-color: var(--bg-page); }
+.bg-card        { background-color: var(--bg-card); }

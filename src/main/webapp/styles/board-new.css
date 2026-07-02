@@ -1,0 +1,40 @@
+.form-card {
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+}
+
+/* ── Sélecteur de couleur ────────────────────── */
+.color-picker {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.color-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow 0.15s, transform 0.1s;
+}
+
+.color-swatch:hover {
+    transform: scale(1.05);
+}
+
+.color-swatch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.color-swatch:has(input:checked) {
+    box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--primary);
+}

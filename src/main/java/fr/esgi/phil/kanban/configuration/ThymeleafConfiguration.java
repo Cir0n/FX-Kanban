@@ -1,4 +1,4 @@
-package fr.esgi.fx.kanban.configuration;
+package fr.esgi.phil.kanban.configuration;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -11,7 +11,7 @@ public class ThymeleafConfiguration implements ServletContextListener {
     private JakartaServletWebApplication application;
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        IO.println("Initialisation Thymeleaf");
+        System.out.println("Initialisation Thymeleaf");
         application = JakartaServletWebApplication.buildApplication(sce.getServletContext());
         TemplateEngine templateEngine = new TemplateEngine();
         WebApplicationTemplateResolver templateResolver = new
@@ -19,8 +19,10 @@ public class ThymeleafConfiguration implements ServletContextListener {
         templateResolver.setTemplateMode(TemplateMode.HTML);
         templateResolver.setPrefix("/WEB-INF/templates/");
         templateResolver.setSuffix(".html");
-        templateResolver.setCacheTTLMs(Long.valueOf(3600000L));
-        templateResolver.setCacheable(true);
+        // En développement : cache désactivé pour que les modifications de templates
+        // soient prises en compte sans redémarrer le serveur.
+        // En production, repasser à setCacheable(true) (+ un TTL) pour les performances.
+        templateResolver.setCacheable(false);
         templateEngine.setTemplateResolver(templateResolver);
         sce.getServletContext().setAttribute("templateEngine", templateEngine);
     }

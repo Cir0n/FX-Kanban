@@ -1,0 +1,77 @@
+.logo-lg {
+    font-size: 56px;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.auth-page {
+    background-color: var(--bg-page);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    padding: 48px;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+}
+
+.auth-subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: var(--text-tertiary);
+    margin-bottom: 32px;
+}
+
+/* ── Onglets Auth ────────────────────────────── */
+.auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+}
+
+.auth-tab {
+    flex: 1;
+    text-align: center;
+    padding: 14px 0;
+    font-size: 16px;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    font-weight: 400;
+}
+
+.auth-tab:hover {
+    color: var(--primary);
+}
+
+.auth-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 500;
+}
+
+/* ── Lien switch (auth) ──────────────────────── */
+.switch-text {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--text-tertiary);
+}
+
+.switch-text a {
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.switch-text a:hover {
+    text-decoration: underline;
+}
