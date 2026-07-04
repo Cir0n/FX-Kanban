@@ -10,6 +10,18 @@ public final class ConnectionManager {
     private static final String USER = "sa";
     private static final String PASSWORD = "";
 
+    // Sous Tomcat, le driver H2 (WEB-INF/lib) est chargé par le classloader isolé du
+    // webapp ; l'auto-enregistrement via ServiceLoader ne l'expose pas à DriverManager
+    // (chargé par le classloader système). On force donc son enregistrement ici.
+    static {
+        try {
+            Class.forName("org.h2.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new ExceptionInInitializerError(
+                    "Driver H2 introuvable sur le classpath : " + e.getMessage());
+        }
+    }
+
     private ConnectionManager() {}
 
     public static Connection getConnection() throws SQLException {

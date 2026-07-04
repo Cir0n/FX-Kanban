@@ -44,3 +44,5 @@ build/
 # Fichiers de base de données H2
 *.mv.db
 *.trace.db
+
+*.lock.db
