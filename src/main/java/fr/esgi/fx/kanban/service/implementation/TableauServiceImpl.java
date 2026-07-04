@@ -42,6 +42,11 @@ public class TableauServiceImpl implements ITableauService {
     }
 
     @Override
+    public List<Utilisateur> findContributeurs(Long tableauId) {
+        return tableauRepository.findContributeurs(tableauId);
+    }
+
+    @Override
     public void inviterContributeur(Long tableauId, String pseudo) {
         Utilisateur utilisateur = utilisateurRepository.findByPseudo(pseudo)
                 .orElseThrow(() -> new IllegalArgumentException("Aucun utilisateur trouvé avec le pseudo : " + pseudo));

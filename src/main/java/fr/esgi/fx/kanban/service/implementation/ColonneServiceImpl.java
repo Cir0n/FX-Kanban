@@ -18,4 +18,17 @@ public class ColonneServiceImpl implements IColonneService {
     public List<Colonne> findByTableauId(Long tableauId) {
         return colonneRepository.findByTableauId(tableauId);
     }
+
+    @Override
+    public Colonne creer(String name, int position, Long tableauId) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Le nom de la colonne ne peut pas être vide");
+        }
+        Colonne colonne = Colonne.builder()
+                .name(name)
+                .position(position)
+                .tableauId(tableauId)
+                .build();
+        return colonneRepository.save(colonne);
+    }
 }

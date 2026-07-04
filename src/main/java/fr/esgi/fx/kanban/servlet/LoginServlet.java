@@ -1,5 +1,8 @@
 package fr.esgi.fx.kanban.servlet;
 
+import fr.esgi.fx.kanban.model.Utilisateur;
+import fr.esgi.fx.kanban.service.IUtilisateurService;
+import fr.esgi.fx.kanban.service.ServiceFactory;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,12 +20,13 @@ public class LoginServlet extends HttpServlet {
 
     private TemplateEngine templateEngine;
     private JakartaServletWebApplication application;
+    private IUtilisateurService utilisateurService;
 
     @Override
     public void init() {
-        System.out.println("hello from LongServlet");
         templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");
         application = JakartaServletWebApplication.buildApplication(getServletContext());
+        utilisateurService = ServiceFactory.utilisateurService();
     }
 
     // Les expressions de lien @{/...} de Thymeleaf 3.1 exigent un WebContext.
@@ -78,18 +82,15 @@ public class LoginServlet extends HttpServlet {
             return;
         }
 
-        // TODO : Remplacer par userService.authenticate(pseudo, password)
-        // Faux utilisateurs pour le développement
-        boolean authenticated = ("jean.d".equals(pseudo) && "password123".equals(password))
-                || ("alice.m".equals(pseudo) && "password123".equals(password))
-                || ("tom.l".equals(pseudo) && "password123".equals(password));
-
-        if (authenticated) {
+        // Authentification via la couche service (mot de passe haché en base).
+        try {
+            Utilisateur utilisateur = utilisateurService.connecter(pseudo, password);
             HttpSession session = request.getSession(true);
-            session.setAttribute("user", pseudo);
+            session.setAttribute("user", utilisateur.getPseudo());
+            session.setAttribute("userId", utilisateur.getId());
             response.sendRedirect(request.getContextPath() + "/dashboard");
-        } else {
-            context.setVariable("error", "Pseudo ou mot de passe incorrect.");
+        } catch (IllegalArgumentException e) {
+            context.setVariable("error", e.getMessage());
             context.setVariable("pseudo", pseudo);
             response.setContentType("text/html;charset=UTF-8");
             templateEngine.process("login", context, response.getWriter());

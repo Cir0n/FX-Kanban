@@ -1,5 +1,7 @@
 package fr.esgi.fx.kanban.servlet;
 
+import fr.esgi.fx.kanban.service.IUtilisateurService;
+import fr.esgi.fx.kanban.service.ServiceFactory;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,11 +22,13 @@ public class RegisterServlet extends HttpServlet {
 
     private TemplateEngine templateEngine;
     private JakartaServletWebApplication application;
+    private IUtilisateurService utilisateurService;
 
     @Override
     public void init() {
         templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");
         application = JakartaServletWebApplication.buildApplication(getServletContext());
+        utilisateurService = ServiceFactory.utilisateurService();
     }
 
     // Les expressions de lien @{/...} de Thymeleaf 3.1 exigent un WebContext.
@@ -83,15 +87,13 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
 
-        // TODO : Remplacer par userService.register(pseudo, email, password)
-        //  - vérifier l'unicité du pseudo / email
-        //  - hacher le mot de passe avant persistance
-        boolean pseudoAlreadyUsed = "jean.d".equals(pseudo)
-                || "alice.m".equals(pseudo)
-                || "tom.l".equals(pseudo);
-
-        if (pseudoAlreadyUsed) {
-            context.setVariable("pseudoError", "Ce pseudo est déjà utilisé.");
+        // Inscription via la couche service (unicité pseudo/email + hachage du mot de passe).
+        try {
+            utilisateurService.inscrire(pseudo.trim(), email.trim(), password);
+        } catch (IllegalArgumentException e) {
+            // Le service renvoie un message ciblé (pseudo, email ou mot de passe) ;
+            // on le rattache au champ pseudo faute de code d'erreur structuré.
+            context.setVariable("pseudoError", e.getMessage());
             context.setVariable("pseudo", pseudo);
             context.setVariable("email", email);
             response.setContentType("text/html;charset=UTF-8");
