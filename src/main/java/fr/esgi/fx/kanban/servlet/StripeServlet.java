@@ -4,7 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
-import fr.esgi.fx.kanban.stripe.StripeService;
+import fr.esgi.fx.kanban.configuration.StripeConfiguration;
+import fr.esgi.fx.kanban.service.IStripeService;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -33,12 +34,11 @@ import java.util.stream.Collectors;
 public class StripeServlet extends HttpServlet {
 
     private static final Gson gson = new Gson();
-    private StripeService stripeService;
+    private IStripeService stripeService;
 
     @Override
     public void init() {
-        System.out.println("Initialisation de la servlet StripeServlet");
-        stripeService = StripeService.getInstance();
+        stripeService = (IStripeService) getServletContext().getAttribute(StripeConfiguration.STRIPE_SERVICE_CONTEXT_KEY);
     }
 
     /**
@@ -49,6 +49,14 @@ public class StripeServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        if (stripeService == null) {
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            JsonObject error = new JsonObject();
+            error.addProperty("error", "Le service Stripe n'est pas disponible.");
+            response.getWriter().write(gson.toJson(error));
+            return;
+        }
 
         try {
             // Lecture du corps JSON de la requête
@@ -90,6 +98,8 @@ public class StripeServlet extends HttpServlet {
     /**
      * GET /stripe/checkout?status=success|cancel
      * Page de retour après le paiement Stripe.
+     * - success : redirection auto vers /dashboard après 3 secondes
+     * - cancel : affichage d'un lien vers /dashboard
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -97,10 +107,27 @@ public class StripeServlet extends HttpServlet {
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
 
+        String contextPath = request.getContextPath();
+
         if ("success".equals(status)) {
-            response.getWriter().write("<h1>Paiement réussi !</h1><p>Merci pour votre achat.</p>");
+            String dashboardUrl = contextPath + "/dashboard";
+            response.getWriter().write(
+                    "<html><head>" +
+                    "<meta http-equiv=\"refresh\" content=\"3; url=" + dashboardUrl + "\" />" +
+                    "</head><body>" +
+                    "<h1>Paiement réussi !</h1>" +
+                    "<p>Merci pour votre achat. Redirection en cours...</p>" +
+                    "</body></html>"
+            );
         } else if ("cancel".equals(status)) {
-            response.getWriter().write("<h1>Paiement annulé</h1><p>Vous avez annulé le paiement.</p>");
+            String dashboardUrl = contextPath + "/dashboard";
+            response.getWriter().write(
+                    "<html><body>" +
+                    "<h1>Paiement annulé</h1>" +
+                    "<p>Vous avez annulé le paiement.</p>" +
+                    "<a href=\"" + dashboardUrl + "\">Retour au tableau de bord</a>" +
+                    "</body></html>"
+            );
         } else {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write("<h1>Requête invalide</h1>");

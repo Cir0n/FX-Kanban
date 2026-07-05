@@ -1,5 +1,9 @@
 package fr.esgi.fx.kanban.servlet;
 
+import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
+import fr.esgi.fx.kanban.configuration.StripeConfiguration;
+import fr.esgi.fx.kanban.service.IStripeService;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -19,14 +23,26 @@ public class BoardNewServlet extends HttpServlet {
     // Palette proposée pour la barre de couleur du tableau (alignée sur le design system).
     private static final List<String> COULEURS = List.of(
             "#378ADD", "#1D9E75", "#BA7517", "#E24B4A", "#635BFF", "#475569");
+    private static final long BOARD_CREATION_PRICE_CENTS = 500L;
+    private static final String BOARD_CREATION_CURRENCY = "eur";
+    private static final String BOARD_NAME_PATTERN = "^[a-zA-Z0-9]+$";
+
+    private static final String TEMPLATE_BOARD_NEW    = "board-new";
+    private static final String CONTENT_TYPE_HTML     = "text/html;charset=UTF-8";
+    private static final String VAR_USER_INITIALES    = "userInitiales";
+    private static final String VAR_COULEURS          = "couleurs";
+    private static final String VAR_COULEUR           = "couleur";
+    private static final String VAR_NAME_ERROR        = "nameError";
 
     private TemplateEngine templateEngine;
     private JakartaServletWebApplication application;
+    private IStripeService stripeService;
 
     @Override
     public void init() {
         templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");
         application = JakartaServletWebApplication.buildApplication(getServletContext());
+        stripeService = (IStripeService) getServletContext().getAttribute(StripeConfiguration.STRIPE_SERVICE_CONTEXT_KEY);
     }
 
     // Les expressions de lien @{/...} de Thymeleaf 3.1 exigent un WebContext.
@@ -55,12 +71,12 @@ public class BoardNewServlet extends HttpServlet {
 
         WebContext context = newContext(request, response);
         context.setVariable("user", pseudo);
-        context.setVariable("userInitiales", initiales(pseudo));
-        context.setVariable("couleurs", COULEURS);
-        context.setVariable("couleur", COULEURS.get(0));
+        context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+        context.setVariable(VAR_COULEURS, COULEURS);
+        context.setVariable(VAR_COULEUR, COULEURS.getFirst());
 
-        response.setContentType("text/html;charset=UTF-8");
-        templateEngine.process("board-new", context, response.getWriter());
+        response.setContentType(CONTENT_TYPE_HTML);
+        templateEngine.process(TEMPLATE_BOARD_NEW, context, response.getWriter());
     }
 
     @Override
@@ -73,39 +89,81 @@ public class BoardNewServlet extends HttpServlet {
         String pseudo = (String) session.getAttribute("user");
 
         String name = request.getParameter("name");
-        String couleur = request.getParameter("couleur");
+        String couleur = request.getParameter(VAR_COULEUR);
+        String trimmedName = name == null ? "" : name.trim();
 
         WebContext context = newContext(request, response);
         boolean hasError = false;
 
         // Validation (alignée avec la validation client de kanban.js)
-        if (name == null || name.trim().isEmpty()) {
-            context.setVariable("nameError", "Le nom du tableau est requis.");
+        if (trimmedName.isEmpty()) {
+            context.setVariable(VAR_NAME_ERROR, "Le nom du tableau est requis.");
             hasError = true;
-        } else if (name.trim().length() > 60) {
-            context.setVariable("nameError", "Le nom ne doit pas dépasser 60 caractères.");
+        } else if (trimmedName.length() > 60) {
+            context.setVariable(VAR_NAME_ERROR, "Le nom ne doit pas dépasser 60 caractères.");
+            hasError = true;
+        } else if (!trimmedName.matches(BOARD_NAME_PATTERN)) {
+            context.setVariable(VAR_NAME_ERROR, "Le nom doit contenir uniquement des caractères alphanumériques.");
             hasError = true;
         }
 
         // La couleur doit faire partie de la palette proposée.
         if (couleur == null || !COULEURS.contains(couleur)) {
-            couleur = COULEURS.get(0);
+            couleur = COULEURS.getFirst();
         }
 
         if (hasError) {
             context.setVariable("user", pseudo);
-            context.setVariable("userInitiales", initiales(pseudo));
-            context.setVariable("couleurs", COULEURS);
-            context.setVariable("couleur", couleur);
+            context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+            context.setVariable(VAR_COULEURS, COULEURS);
+            context.setVariable(VAR_COULEUR, couleur);
             context.setVariable("name", name);
-            response.setContentType("text/html;charset=UTF-8");
-            templateEngine.process("board-new", context, response.getWriter());
+            response.setContentType(CONTENT_TYPE_HTML);
+            templateEngine.process(TEMPLATE_BOARD_NEW, context, response.getWriter());
             return;
+        }
+
+        if (stripeService == null) {
+            context.setVariable("error", "Le service de paiement est indisponible pour le moment.");
+            context.setVariable("user", pseudo);
+            context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+            context.setVariable(VAR_COULEURS, COULEURS);
+            context.setVariable(VAR_COULEUR, couleur);
+            context.setVariable("name", name);
+            response.setContentType(CONTENT_TYPE_HTML);
+            templateEngine.process(TEMPLATE_BOARD_NEW, context, response.getWriter());
+            return;
+        }
+
+        try {
+            String baseUrl = request.getScheme() + "://" + request.getServerName()
+                    + ":" + request.getServerPort() + request.getContextPath();
+            String successUrl = baseUrl + "/stripe/checkout?status=success";
+            String cancelUrl = baseUrl + "/stripe/checkout?status=cancel";
+
+            Session checkoutSession = stripeService.createCheckoutSession(
+                    BOARD_CREATION_PRICE_CENTS,
+                    BOARD_CREATION_CURRENCY,
+                    "Creation d'un tableau Kanban",
+                    successUrl,
+                    cancelUrl
+            );
+
+            response.sendRedirect(checkoutSession.getUrl());
+        } catch (StripeException e) {
+            getServletContext().log("Erreur lors de la creation de la session Stripe", e);
+            context.setVariable("error", "Impossible d'initialiser le paiement. Veuillez reessayer.");
+            context.setVariable("user", pseudo);
+            context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+            context.setVariable(VAR_COULEURS, COULEURS);
+            context.setVariable(VAR_COULEUR, couleur);
+            context.setVariable("name", name);
+            response.setContentType(CONTENT_TYPE_HTML);
+            templateEngine.process(TEMPLATE_BOARD_NEW, context, response.getWriter());
         }
 
         // TODO : Remplacer par tableauService.create(pseudo, name, couleur)
         //  puis rediriger vers /board?id=<idCréé>.
-        response.sendRedirect(request.getContextPath() + "/dashboard");
     }
 
     /** "jean.d" -> "JD", "alice" -> "A". */
@@ -122,6 +180,6 @@ public class BoardNewServlet extends HttpServlet {
                 break;
             }
         }
-        return sb.length() == 0 ? "?" : sb.toString();
+        return sb.isEmpty() ? "?" : sb.toString();
     }
 }
