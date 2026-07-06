@@ -44,3 +44,6 @@ build/
 # Fichiers de base de données H2
 *.mv.db
 *.trace.db
+
+# Secrets locaux
+src/main/resources/.env
