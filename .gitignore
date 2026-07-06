@@ -46,3 +46,6 @@ build/
 *.trace.db
 
 *.lock.db
+
+# Secrets locaux
+src/main/resources/.env
