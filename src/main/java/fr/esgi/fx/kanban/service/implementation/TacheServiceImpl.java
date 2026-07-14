@@ -40,6 +40,11 @@ public class TacheServiceImpl implements ITacheService {
     }
 
     @Override
+    public List<Tache> findByColonneId(Long colonneId) {
+        return tacheRepository.findByColonneId(colonneId);
+    }
+
+    @Override
     public void deplacer(Long tacheId, Long nouvelleColonneId, Long utilisateurId) {
         Tache tache = tacheRepository.findById(tacheId)
                 .orElseThrow(() -> new IllegalArgumentException("Tâche introuvable"));

@@ -4,6 +4,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import fr.esgi.fx.kanban.configuration.StripeConfiguration;
 import fr.esgi.fx.kanban.service.IStripeService;
+import fr.esgi.fx.kanban.viewmodel.VueSupport;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,6 +35,11 @@ public class BoardNewServlet extends HttpServlet {
     private static final String VAR_COULEUR           = "couleur";
     private static final String VAR_NAME_ERROR        = "nameError";
 
+    // Attributs de session utilisés pour transporter la création du tableau jusqu'à la
+    // confirmation du paiement Stripe : un tableau n'est créé qu'après paiement validé.
+    static final String SESSION_PENDING_NAME    = "pendingBoardName";
+    static final String SESSION_PENDING_COULEUR = "pendingBoardCouleur";
+
     private TemplateEngine templateEngine;
     private JakartaServletWebApplication application;
     private IStripeService stripeService;
@@ -53,7 +59,7 @@ public class BoardNewServlet extends HttpServlet {
 
     private boolean requireLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user") == null) {
+        if (session == null || session.getAttribute("userId") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return false;
         }
@@ -71,7 +77,7 @@ public class BoardNewServlet extends HttpServlet {
 
         WebContext context = newContext(request, response);
         context.setVariable("user", pseudo);
-        context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+        context.setVariable(VAR_USER_INITIALES, VueSupport.initiales(pseudo));
         context.setVariable(VAR_COULEURS, COULEURS);
         context.setVariable(VAR_COULEUR, COULEURS.getFirst());
 
@@ -114,7 +120,7 @@ public class BoardNewServlet extends HttpServlet {
 
         if (hasError) {
             context.setVariable("user", pseudo);
-            context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+            context.setVariable(VAR_USER_INITIALES, VueSupport.initiales(pseudo));
             context.setVariable(VAR_COULEURS, COULEURS);
             context.setVariable(VAR_COULEUR, couleur);
             context.setVariable("name", name);
@@ -126,7 +132,7 @@ public class BoardNewServlet extends HttpServlet {
         if (stripeService == null) {
             context.setVariable("error", "Le service de paiement est indisponible pour le moment.");
             context.setVariable("user", pseudo);
-            context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+            context.setVariable(VAR_USER_INITIALES, VueSupport.initiales(pseudo));
             context.setVariable(VAR_COULEURS, COULEURS);
             context.setVariable(VAR_COULEUR, couleur);
             context.setVariable("name", name);
@@ -141,6 +147,11 @@ public class BoardNewServlet extends HttpServlet {
             String successUrl = baseUrl + "/stripe/checkout?status=success";
             String cancelUrl = baseUrl + "/stripe/checkout?status=cancel";
 
+            // Le tableau n'est créé qu'après confirmation du paiement (voir
+            // StripeServlet#doGet) : on transporte les infos de création en session.
+            session.setAttribute(SESSION_PENDING_NAME, trimmedName);
+            session.setAttribute(SESSION_PENDING_COULEUR, couleur);
+
             Session checkoutSession = stripeService.createCheckoutSession(
                     BOARD_CREATION_PRICE_CENTS,
                     BOARD_CREATION_CURRENCY,
@@ -151,35 +162,17 @@ public class BoardNewServlet extends HttpServlet {
 
             response.sendRedirect(checkoutSession.getUrl());
         } catch (StripeException e) {
+            session.removeAttribute(SESSION_PENDING_NAME);
+            session.removeAttribute(SESSION_PENDING_COULEUR);
             getServletContext().log("Erreur lors de la creation de la session Stripe", e);
             context.setVariable("error", "Impossible d'initialiser le paiement. Veuillez reessayer.");
             context.setVariable("user", pseudo);
-            context.setVariable(VAR_USER_INITIALES, initiales(pseudo));
+            context.setVariable(VAR_USER_INITIALES, VueSupport.initiales(pseudo));
             context.setVariable(VAR_COULEURS, COULEURS);
             context.setVariable(VAR_COULEUR, couleur);
             context.setVariable("name", name);
             response.setContentType(CONTENT_TYPE_HTML);
             templateEngine.process(TEMPLATE_BOARD_NEW, context, response.getWriter());
         }
-
-        // TODO : Remplacer par tableauService.create(pseudo, name, couleur)
-        //  puis rediriger vers /board?id=<idCréé>.
-    }
-
-    /** "jean.d" -> "JD", "alice" -> "A". */
-    private String initiales(String s) {
-        if (s == null || s.isBlank()) {
-            return "?";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (String part : s.split("[.\\s_-]+")) {
-            if (!part.isEmpty()) {
-                sb.append(Character.toUpperCase(part.charAt(0)));
-            }
-            if (sb.length() == 2) {
-                break;
-            }
-        }
-        return sb.isEmpty() ? "?" : sb.toString();
     }
 }
