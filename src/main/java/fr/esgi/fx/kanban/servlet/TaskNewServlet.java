@@ -2,6 +2,7 @@ package fr.esgi.fx.kanban.servlet;
 
 import fr.esgi.fx.kanban.service.ITacheService;
 import fr.esgi.fx.kanban.service.ServiceFactory;
+import fr.esgi.fx.kanban.viewmodel.VueSupport;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,17 +10,9 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.WebServlet;
 
 import java.io.IOException;
-import java.util.Map;
 
 @WebServlet(name = "taskNewServlet", value = {"/task/new"})
 public class TaskNewServlet extends HttpServlet {
-
-    /** Correspondance type de tâche (formulaire) -> id en base (voir import.sql). */
-    private static final Map<String, Long> TYPE_IDS = Map.of(
-            "standard", 1L,
-            "bug", 2L,
-            "spike", 3L,
-            "amelio", 4L);
 
     private ITacheService tacheService;
 
@@ -50,7 +43,7 @@ public class TaskNewServlet extends HttpServlet {
             return;
         }
 
-        Long typeId = TYPE_IDS.getOrDefault(type, 1L);
+        Long typeId = VueSupport.typeIdDepuisClasse(type);
 
         // Persistance via la couche service. L'assigné n'est pas transmis ici :
         // le service positionne le créateur, l'assignation se fait ultérieurement.

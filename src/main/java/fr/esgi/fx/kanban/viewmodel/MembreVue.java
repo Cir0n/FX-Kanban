@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MembreVue {
+    private Long id;
     private String initiales;
     private String couleur; // couleur de fond de l'avatar (hex)
 }

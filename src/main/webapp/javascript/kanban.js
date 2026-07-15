@@ -126,6 +126,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!openModalEl) {
             return;
         }
+        // Repasse en mode lecture pour la prochaine ouverture de cette modale.
+        var view = openModalEl.querySelector('[data-task-view]');
+        var editForm = openModalEl.querySelector('[data-task-edit]');
+        if (view && editForm) {
+            view.hidden = false;
+            editForm.hidden = true;
+        }
         openModalEl.hidden = true;
         document.body.style.overflow = '';
         openModalEl = null;
@@ -197,6 +204,39 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // ── Édition d'une tâche (bascule vue/formulaire dans la modale) ──
+    document.querySelectorAll('[data-edit-task]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var modal = btn.closest('.task-modal');
+            var view = modal.querySelector('[data-task-view]');
+            var editForm = modal.querySelector('[data-task-edit]');
+            view.hidden = true;
+            editForm.hidden = false;
+        });
+    });
+
+    document.querySelectorAll('[data-cancel-edit]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var modal = btn.closest('.task-modal');
+            var view = modal.querySelector('[data-task-view]');
+            var editForm = modal.querySelector('[data-task-edit]');
+            view.hidden = false;
+            editForm.hidden = true;
+        });
+    });
+
+    // Validation côté client (édition de tâche)
+    document.querySelectorAll('form[data-task-edit]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            var name = form.querySelector('input[name="name"]');
+            clearFieldError(name);
+            if (!name.value.trim()) {
+                showFieldError(name, 'Le nom de la tâche est requis.');
+                e.preventDefault();
+            }
+        });
+    });
 
     // Fermeture : bouton ✕, clic sur le fond, touche Échap
     document.querySelectorAll('.modal-overlay').forEach(function (overlay) {

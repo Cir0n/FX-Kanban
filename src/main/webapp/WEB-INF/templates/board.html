@@ -44,6 +44,7 @@
 
     <!-- Messages de confirmation / erreur -->
     <div th:if="${created}" class="alert-success">La tâche a bien été ajoutée.</div>
+    <div th:if="${updated}" class="alert-success">La tâche a bien été modifiée.</div>
     <div th:if="${invited}" class="alert-success">Le membre a bien été ajouté au tableau.</div>
     <div th:if="${error}" class="alert-error" th:text="${error}">Une erreur est survenue.</div>
 
@@ -141,59 +142,118 @@
                                       th:text="${tache.typeLabel}">Standard</span>
                                 <h2 class="task-modal-title" th:text="${tache.name}">Nom de la tâche</h2>
                             </div>
-                            <button type="button" class="modal-close" data-modal-close
-                                    aria-label="Fermer">&times;</button>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <button type="button" class="btn-outline-kanban" data-edit-task>Modifier</button>
+                                <button type="button" class="modal-close" data-modal-close
+                                        aria-label="Fermer">&times;</button>
+                            </div>
                         </div>
 
                         <div class="task-modal-body">
 
-                            <div class="modal-meta" th:if="${tache.assignee != null}">
-                                <div class="meta-item">
-                                    <span class="avatar avatar-md"
-                                          th:style="'background: ' + ${tache.assignee.couleur}"
-                                          th:text="${tache.assignee.initiales}">JD</span>
-                                    <span>Assigné à <strong th:text="${tache.assignee.initiales}">JD</strong></span>
-                                </div>
-                            </div>
+                            <div data-task-view>
 
-                            <div class="modal-section">
-                                <div class="modal-section-title">Description</div>
-                                <p class="modal-desc" th:text="${tache.description}">Description.</p>
-                            </div>
-
-                            <div class="modal-section" th:if="${tache.pieceJointeNom != null}">
-                                <div class="modal-section-title">Pièce jointe</div>
-                                <span class="attachment-chip">
-                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-                                         stroke="currentColor" stroke-width="1.7">
-                                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-                                    </svg>
-                                    <span th:text="${tache.pieceJointeNom}">fichier.pdf</span>
-                                </span>
-                            </div>
-
-                            <div class="modal-section">
-                                <div class="modal-section-title">
-                                    Commentaires (<span th:text="${#lists.size(tache.commentaires)}">0</span>)
-                                </div>
-
-                                <p class="modal-empty" th:if="${#lists.isEmpty(tache.commentaires)}">
-                                    Aucun commentaire pour l'instant.
-                                </p>
-
-                                <div th:each="c : ${tache.commentaires}" class="comment">
-                                    <span class="avatar avatar-md"
-                                          th:style="'background: ' + ${c.couleur}"
-                                          th:text="${c.initiales}">JD</span>
-                                    <div class="comment-body">
-                                        <div>
-                                            <span class="comment-author" th:text="${c.auteur}">jean.d</span>
-                                            <span class="comment-date" th:text="${c.date}">2 juil.</span>
-                                        </div>
-                                        <div class="comment-content" th:text="${c.content}">Contenu.</div>
+                                <div class="modal-meta" th:if="${tache.assignee != null}">
+                                    <div class="meta-item">
+                                        <span class="avatar avatar-md"
+                                              th:style="'background: ' + ${tache.assignee.couleur}"
+                                              th:text="${tache.assignee.initiales}">JD</span>
+                                        <span>Assigné à <strong th:text="${tache.assignee.initiales}">JD</strong></span>
                                     </div>
                                 </div>
+
+                                <div class="modal-section">
+                                    <div class="modal-section-title">Description</div>
+                                    <p class="modal-desc" th:text="${tache.description}">Description.</p>
+                                </div>
+
+                                <div class="modal-section" th:if="${tache.pieceJointeNom != null}">
+                                    <div class="modal-section-title">Pièce jointe</div>
+                                    <span class="attachment-chip">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                             stroke="currentColor" stroke-width="1.7">
+                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                        </svg>
+                                        <span th:text="${tache.pieceJointeNom}">fichier.pdf</span>
+                                    </span>
+                                </div>
+
+                                <div class="modal-section">
+                                    <div class="modal-section-title">
+                                        Commentaires (<span th:text="${#lists.size(tache.commentaires)}">0</span>)
+                                    </div>
+
+                                    <p class="modal-empty" th:if="${#lists.isEmpty(tache.commentaires)}">
+                                        Aucun commentaire pour l'instant.
+                                    </p>
+
+                                    <div th:each="c : ${tache.commentaires}" class="comment">
+                                        <span class="avatar avatar-md"
+                                              th:style="'background: ' + ${c.couleur}"
+                                              th:text="${c.initiales}">JD</span>
+                                        <div class="comment-body">
+                                            <div>
+                                                <span class="comment-author" th:text="${c.auteur}">jean.d</span>
+                                                <span class="comment-date" th:text="${c.date}">2 juil.</span>
+                                            </div>
+                                            <div class="comment-content" th:text="${c.content}">Contenu.</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
+
+                            <form class="task-edit" data-task-edit hidden
+                                  th:action="@{/task/edit}" method="post" novalidate>
+
+                                <input type="hidden" name="boardId" th:value="${boardId}">
+                                <input type="hidden" name="taskId" th:value="${tache.id}">
+
+                                <div class="mb-3">
+                                    <label class="form-label">Nom de la tâche</label>
+                                    <input type="text" class="form-control" name="name"
+                                           th:value="${tache.name}" maxlength="120" required
+                                           style="width: 100%;">
+                                    <div class="invalid-feedback">Le nom de la tâche est requis.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control form-textarea" name="description" rows="3"
+                                              style="width: 100%;" th:text="${tache.description}"></textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="mb-3" style="flex: 1;">
+                                        <label class="form-label">Type</label>
+                                        <select class="form-control form-select-kanban" name="type"
+                                                style="width: 100%;">
+                                            <option value="standard" th:selected="${tache.typeClasse == 'standard'}">Standard</option>
+                                            <option value="bug" th:selected="${tache.typeClasse == 'bug'}">Bug</option>
+                                            <option value="spike" th:selected="${tache.typeClasse == 'spike'}">Spike</option>
+                                            <option value="amelio" th:selected="${tache.typeClasse == 'amelio'}">Amélioration</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3" style="flex: 1;">
+                                        <label class="form-label">Assigné à</label>
+                                        <select class="form-control form-select-kanban" name="assignee"
+                                                style="width: 100%;">
+                                            <option value="">Personne</option>
+                                            <option th:each="m : ${membres}"
+                                                    th:value="${m.id}"
+                                                    th:selected="${tache.assigneeId != null and tache.assigneeId == m.id}"
+                                                    th:text="${m.initiales}">JD</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="button" class="btn-outline-kanban" data-cancel-edit>Annuler</button>
+                                    <button type="submit" class="btn-primary-kanban"
+                                            style="width: auto; padding: 0 28px;">Enregistrer</button>
+                                </div>
+
+                            </form>
 
                         </div>
                     </div>

@@ -99,6 +99,7 @@ public class BoardServlet extends HttpServlet {
         context.setVariable("colonnes", colonnes(tableau.getId(), utilisateurs));
         context.setVariable("created", "1".equals(request.getParameter("created")));
         context.setVariable("invited", "1".equals(request.getParameter("invited")));
+        context.setVariable("updated", "1".equals(request.getParameter("updated")));
         context.setVariable("error", request.getParameter("error"));
 
         response.setContentType("text/html;charset=UTF-8");
@@ -142,6 +143,7 @@ public class BoardServlet extends HttpServlet {
                 .typeLabel(typeLabel)
                 .assignee(tache.getUtilisateurId() == null ? null
                         : avatar(utilisateur(tache.getUtilisateurId(), cache)))
+                .assigneeId(tache.getUtilisateurId())
                 .pieceJointeNom(null)
                 .commentaires(commentaires(tache.getId(), cache))
                 .build();
@@ -168,6 +170,7 @@ public class BoardServlet extends HttpServlet {
             return null;
         }
         return MembreVue.builder()
+                .id(utilisateur.getId())
                 .initiales(VueSupport.initiales(utilisateur.getPseudo()))
                 .couleur(VueSupport.couleurAvatar(utilisateur.getPseudo()))
                 .build();

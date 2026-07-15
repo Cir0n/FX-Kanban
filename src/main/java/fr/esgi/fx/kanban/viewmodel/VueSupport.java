@@ -70,6 +70,19 @@ public final class VueSupport {
         };
     }
 
+    /** Opération inverse de {@link #typeClasse(Long)} : classe -> id (voir import.sql). */
+    public static Long typeIdDepuisClasse(String classe) {
+        if (classe == null) {
+            return 1L;
+        }
+        return switch (classe) {
+            case "bug" -> 2L;
+            case "spike" -> 3L;
+            case "amelio" -> 4L;
+            default -> 1L;
+        };
+    }
+
     /** Date formatée pour l'affichage (ex. "2 juil. 09:12"), chaîne vide si null. */
     public static String formatDate(LocalDateTime date) {
         return date == null ? "" : date.format(DATE_FMT);

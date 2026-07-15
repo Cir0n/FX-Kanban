@@ -64,6 +64,28 @@ public class TacheServiceImpl implements ITacheService {
     }
 
     @Override
+    public void modifier(Long id, String name, String description, Long typeId, Long assigneId, Long utilisateurId) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Le nom de la tâche ne peut pas être vide");
+        }
+        Tache tache = tacheRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tâche introuvable"));
+
+        tache.setName(name);
+        tache.setDescription(description);
+        tache.setTypeId(typeId);
+        tache.setUtilisateurId(assigneId);
+        tacheRepository.update(tache);
+
+        Action action = Action.builder()
+                .description("Modification de la tâche")
+                .tacheId(id)
+                .utilisateurId(utilisateurId)
+                .build();
+        actionRepository.save(action);
+    }
+
+    @Override
     public void supprimer(Long id) {
         tacheRepository.delete(id);
     }

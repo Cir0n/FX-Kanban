@@ -8,5 +8,6 @@ public interface ITacheService {
     Tache findById(Long id);
     List<Tache> findByColonneId(Long colonneId);
     void deplacer(Long tacheId, Long nouvelleColonneId, Long utilisateurId);
+    void modifier(Long id, String name, String description, Long typeId, Long assigneId, Long utilisateurId);
     void supprimer(Long id);
 }
