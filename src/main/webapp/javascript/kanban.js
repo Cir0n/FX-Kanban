@@ -238,6 +238,19 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // ── Suppression d'une tâche ───────────────────
+    var deleteTaskForm = document.getElementById('deleteTaskForm');
+    var deleteTaskId = document.getElementById('deleteTaskId');
+    document.querySelectorAll('[data-delete-task]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (!window.confirm('Supprimer définitivement cette tâche ?')) {
+                return;
+            }
+            deleteTaskId.value = btn.getAttribute('data-task-id');
+            deleteTaskForm.submit();
+        });
+    });
+
     // Fermeture : bouton ✕, clic sur le fond, touche Échap
     document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
         overlay.addEventListener('click', function (e) {

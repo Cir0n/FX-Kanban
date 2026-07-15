@@ -45,6 +45,7 @@
     <!-- Messages de confirmation / erreur -->
     <div th:if="${created}" class="alert-success">La tâche a bien été ajoutée.</div>
     <div th:if="${updated}" class="alert-success">La tâche a bien été modifiée.</div>
+    <div th:if="${deleted}" class="alert-success">La tâche a bien été supprimée.</div>
     <div th:if="${invited}" class="alert-success">Le membre a bien été ajouté au tableau.</div>
     <div th:if="${error}" class="alert-error" th:text="${error}">Une erreur est survenue.</div>
 
@@ -247,10 +248,14 @@
                                     </div>
                                 </div>
 
-                                <div class="form-actions">
-                                    <button type="button" class="btn-outline-kanban" data-cancel-edit>Annuler</button>
-                                    <button type="submit" class="btn-primary-kanban"
-                                            style="width: auto; padding: 0 28px;">Enregistrer</button>
+                                <div class="form-actions" style="justify-content: space-between;">
+                                    <button type="button" class="btn-danger-kanban" data-delete-task
+                                            th:attr="data-task-id=${tache.id}">Supprimer</button>
+                                    <div style="display:flex; gap:12px;">
+                                        <button type="button" class="btn-outline-kanban" data-cancel-edit>Annuler</button>
+                                        <button type="submit" class="btn-primary-kanban"
+                                                style="width: auto; padding: 0 28px;">Enregistrer</button>
+                                    </div>
                                 </div>
 
                             </form>
@@ -370,6 +375,12 @@
             </div>
         </div>
     </div>
+
+    <!-- Formulaire de suppression partagé, rempli via JS avant soumission -->
+    <form id="deleteTaskForm" th:action="@{/task/delete}" method="post" style="display:none;">
+        <input type="hidden" name="boardId" th:value="${boardId}">
+        <input type="hidden" name="taskId" id="deleteTaskId">
+    </form>
 
 </main>
 

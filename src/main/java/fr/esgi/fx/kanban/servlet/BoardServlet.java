@@ -100,6 +100,7 @@ public class BoardServlet extends HttpServlet {
         context.setVariable("created", "1".equals(request.getParameter("created")));
         context.setVariable("invited", "1".equals(request.getParameter("invited")));
         context.setVariable("updated", "1".equals(request.getParameter("updated")));
+        context.setVariable("deleted", "1".equals(request.getParameter("deleted")));
         context.setVariable("error", request.getParameter("error"));
 
         response.setContentType("text/html;charset=UTF-8");

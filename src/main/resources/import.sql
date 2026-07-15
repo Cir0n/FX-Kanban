@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS piece_jointe (
     contenu     BLOB         NOT NULL,
     created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
     tache_id    BIGINT       NOT NULL,
-    FOREIGN KEY (tache_id) REFERENCES tache(id)
+    FOREIGN KEY (tache_id) REFERENCES tache(id) ON DELETE CASCADE
 );
 
 -- 8. Commentaire
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS commentaire (
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tache_id       BIGINT    NOT NULL,
     utilisateur_id BIGINT    NOT NULL,
-    FOREIGN KEY (tache_id)       REFERENCES tache(id),
+    FOREIGN KEY (tache_id)       REFERENCES tache(id) ON DELETE CASCADE,
     FOREIGN KEY (utilisateur_id) REFERENCES utilisateur(id)
 );
 
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS action (
     utilisateur_id    BIGINT    NOT NULL,
     colonne_source_id BIGINT    NULL,
     colonne_cible_id  BIGINT    NULL,
-    FOREIGN KEY (tache_id)          REFERENCES tache(id),
+    FOREIGN KEY (tache_id)          REFERENCES tache(id) ON DELETE CASCADE,
     FOREIGN KEY (utilisateur_id)    REFERENCES utilisateur(id),
     FOREIGN KEY (colonne_source_id) REFERENCES colonne(id),
     FOREIGN KEY (colonne_cible_id)  REFERENCES colonne(id)
