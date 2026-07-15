@@ -24,7 +24,7 @@ public class StripeConfiguration implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         String apiKey = dotenv.get(STRIPE_API_KEY_ENV);
         if (apiKey == null || apiKey.isBlank()) {
