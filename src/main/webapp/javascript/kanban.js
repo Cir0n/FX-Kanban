@@ -172,6 +172,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ── Modale d'invitation d'un membre ──────────
+    var inviteModal = document.getElementById('modal-invite');
+    var inviteBtn = document.getElementById('inviteBtn');
+    if (inviteBtn) {
+        inviteBtn.addEventListener('click', function () {
+            var form = document.getElementById('inviteForm');
+            if (form) {
+                form.reset();
+                clearFieldError(document.getElementById('invitePseudo'));
+            }
+            openModal(inviteModal);
+        });
+    }
+
+    var inviteForm = document.getElementById('inviteForm');
+    if (inviteForm) {
+        inviteForm.addEventListener('submit', function (e) {
+            var pseudo = document.getElementById('invitePseudo');
+            clearFieldError(pseudo);
+            if (!pseudo.value.trim()) {
+                showFieldError(pseudo, 'Le pseudo est requis.');
+                e.preventDefault();
+            }
+        });
+    }
+
     // Fermeture : bouton ✕, clic sur le fond, touche Échap
     document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
         overlay.addEventListener('click', function (e) {

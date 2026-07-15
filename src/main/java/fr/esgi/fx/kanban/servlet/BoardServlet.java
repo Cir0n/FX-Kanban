@@ -98,6 +98,8 @@ public class BoardServlet extends HttpServlet {
         context.setVariable("membres", membres(tableau.getId()));
         context.setVariable("colonnes", colonnes(tableau.getId(), utilisateurs));
         context.setVariable("created", "1".equals(request.getParameter("created")));
+        context.setVariable("invited", "1".equals(request.getParameter("invited")));
+        context.setVariable("error", request.getParameter("error"));
 
         response.setContentType("text/html;charset=UTF-8");
         templateEngine.process("board", context, response.getWriter());

@@ -42,8 +42,10 @@
     <!-- Fil d'ariane -->
     <a th:href="@{/dashboard}" class="back-link">← Mes tableaux</a>
 
-    <!-- Confirmation de création -->
+    <!-- Messages de confirmation / erreur -->
     <div th:if="${created}" class="alert-success">La tâche a bien été ajoutée.</div>
+    <div th:if="${invited}" class="alert-success">Le membre a bien été ajouté au tableau.</div>
+    <div th:if="${error}" class="alert-error" th:text="${error}">Une erreur est survenue.</div>
 
     <!-- En-tête du tableau -->
     <div class="board-header">
@@ -68,6 +70,8 @@
                       th:style="'background: ' + ${membre.couleur}"
                       th:text="${membre.initiales}">JD</span>
             </div>
+
+            <button type="button" class="btn-outline-kanban" id="inviteBtn">+ Inviter</button>
         </div>
     </div>
 
@@ -266,6 +270,40 @@
                         <button type="button" class="btn-outline-kanban" data-modal-close>Annuler</button>
                         <button type="submit" class="btn-primary-kanban"
                                 style="width: auto; padding: 0 28px;">Créer la tâche</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale : inviter un membre -->
+    <div class="modal-overlay" id="modal-invite" hidden>
+        <div class="task-modal" role="dialog" aria-modal="true" aria-label="Inviter un membre">
+
+            <div class="task-modal-header">
+                <div>
+                    <h2 class="task-modal-title">Inviter un membre</h2>
+                </div>
+                <button type="button" class="modal-close" data-modal-close aria-label="Fermer">&times;</button>
+            </div>
+
+            <div class="task-modal-body">
+                <form id="inviteForm" th:action="@{/board/invite}" method="post" novalidate>
+
+                    <input type="hidden" name="boardId" th:value="${boardId}">
+
+                    <div class="mb-3">
+                        <label for="invitePseudo" class="form-label">Pseudo</label>
+                        <input type="text" class="form-control" id="invitePseudo" name="pseudo"
+                               placeholder="Ex. jean.d" required style="width: 100%;">
+                        <div class="invalid-feedback">Le pseudo est requis.</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-outline-kanban" data-modal-close>Annuler</button>
+                        <button type="submit" class="btn-primary-kanban"
+                                style="width: auto; padding: 0 28px;">Inviter</button>
                     </div>
 
                 </form>

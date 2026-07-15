@@ -50,6 +50,13 @@ public class TableauServiceImpl implements ITableauService {
     public void inviterContributeur(Long tableauId, String pseudo) {
         Utilisateur utilisateur = utilisateurRepository.findByPseudo(pseudo)
                 .orElseThrow(() -> new IllegalArgumentException("Aucun utilisateur trouvé avec le pseudo : " + pseudo));
+
+        boolean dejaMembre = tableauRepository.findContributeurs(tableauId).stream()
+                .anyMatch(contributeur -> contributeur.getId().equals(utilisateur.getId()));
+        if (dejaMembre) {
+            throw new IllegalArgumentException(pseudo + " est déjà membre de ce tableau");
+        }
+
         tableauRepository.addContributeur(tableauId, utilisateur.getId());
     }
 
