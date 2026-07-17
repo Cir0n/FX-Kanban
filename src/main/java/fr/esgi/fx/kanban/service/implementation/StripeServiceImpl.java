@@ -39,5 +39,10 @@ public class StripeServiceImpl implements IStripeService {
 
         return Session.create(params);
     }
+
+    @Override
+    public Session retrieveSession(String sessionId) throws StripeException {
+        return Session.retrieve(sessionId);
+    }
 }
 

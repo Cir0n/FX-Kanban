@@ -20,14 +20,23 @@ public class TableauServiceImpl implements ITableauService {
 
     @Override
     public Tableau creer(String name, Long utilisateurId) {
+        return creer(name, utilisateurId, null);
+    }
+
+    @Override
+    public Tableau creer(String name, Long utilisateurId, String stripeSessionId) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Le nom du tableau ne peut pas être vide");
         }
         Tableau tableau = Tableau.builder()
                 .name(name)
                 .createdBy(utilisateurId)
+                .stripeSessionId(stripeSessionId)
                 .build();
-        return tableauRepository.save(tableau);
+        Tableau saved = tableauRepository.save(tableau);
+        // Le créateur devient automatiquement contributeur pour retrouver son tableau.
+        tableauRepository.addContributeur(saved.getId(), utilisateurId);
+        return saved;
     }
 
     @Override
