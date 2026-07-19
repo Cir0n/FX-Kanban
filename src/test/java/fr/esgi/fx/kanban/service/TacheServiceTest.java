@@ -5,6 +5,7 @@ import fr.esgi.fx.kanban.model.Action;
 import fr.esgi.fx.kanban.model.Tache;
 import fr.esgi.fx.kanban.repository.IActionRepository;
 import fr.esgi.fx.kanban.repository.ITacheRepository;
+import fr.esgi.fx.kanban.repository.IUtilisateurRepository;
 import fr.esgi.fx.kanban.service.implementation.TacheServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +30,14 @@ public class TacheServiceTest {
     TacheServiceImpl tacheService;
     @Mock
     ITacheRepository tacheRepository;
+    @Mock
+    IUtilisateurRepository utilisateurRepository;
+    @Mock
+    IEmailService emailService;
 
     @BeforeEach
     void setUp(){
-        tacheService = new TacheServiceImpl(tacheRepository, actionRepository);
+        tacheService = new TacheServiceImpl(tacheRepository, actionRepository, utilisateurRepository, emailService);
     }
 
 

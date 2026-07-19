@@ -31,7 +31,8 @@ public final class ServiceFactory {
         static final IUtilisateurService UTILISATEUR = new UtilisateurServiceImpl(UTILISATEUR_REPO);
         static final ITableauService TABLEAU = new TableauServiceImpl(TABLEAU_REPO, UTILISATEUR_REPO);
         static final IColonneService COLONNE = new ColonneServiceImpl(COLONNE_REPO);
-        static final ITacheService TACHE = new TacheServiceImpl(TACHE_REPO, ACTION_REPO);
+        static final IEmailService EMAIL = new EmailServiceImpl();
+        static final ITacheService TACHE = new TacheServiceImpl(TACHE_REPO, ACTION_REPO, UTILISATEUR_REPO, EMAIL);
         static final ICommentaireService COMMENTAIRE = new CommentaireServiceImpl(COMMENTAIRE_REPO);
         static final ITypeDeTacheService TYPE = new TypeDeTacheServiceImpl(TYPE_REPO);
         static final IActionService ACTION = new ActionServiceImpl(ACTION_REPO);
@@ -63,5 +64,9 @@ public final class ServiceFactory {
 
     public static IActionService actionService() {
         return Holder.ACTION;
+    }
+
+    public static IEmailService emailService() {
+        return Holder.EMAIL;
     }
 }

@@ -202,6 +202,29 @@
                                     </div>
                                 </div>
 
+                                <div class="modal-section">
+                                    <div class="modal-section-title">
+                                        Historique (<span th:text="${#lists.size(tache.historique)}">0</span>)
+                                    </div>
+
+                                    <p class="modal-empty" th:if="${#lists.isEmpty(tache.historique)}">
+                                        Aucun historique pour l'instant.
+                                    </p>
+
+                                    <div th:each="a : ${tache.historique}" class="comment">
+                                        <span class="avatar avatar-md"
+                                              th:style="'background: ' + ${a.couleur}"
+                                              th:text="${a.initiales}">JD</span>
+                                        <div class="comment-body">
+                                            <div>
+                                                <span class="comment-author" th:text="${a.auteur}">jean.d</span>
+                                                <span class="comment-date" th:text="${a.date}">2 juil.</span>
+                                            </div>
+                                            <div class="comment-content" th:text="${a.description}">Modification de la tâche</div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <form class="task-edit" data-task-edit hidden

@@ -1,11 +1,13 @@
 package fr.esgi.fx.kanban.servlet;
 
+import fr.esgi.fx.kanban.model.Action;
 import fr.esgi.fx.kanban.model.Colonne;
 import fr.esgi.fx.kanban.model.Commentaire;
 import fr.esgi.fx.kanban.model.Tableau;
 import fr.esgi.fx.kanban.model.Tache;
 import fr.esgi.fx.kanban.model.TypeDeTache;
 import fr.esgi.fx.kanban.model.Utilisateur;
+import fr.esgi.fx.kanban.service.IActionService;
 import fr.esgi.fx.kanban.service.IColonneService;
 import fr.esgi.fx.kanban.service.ICommentaireService;
 import fr.esgi.fx.kanban.service.ITableauService;
@@ -13,6 +15,7 @@ import fr.esgi.fx.kanban.service.ITacheService;
 import fr.esgi.fx.kanban.service.ITypeDeTacheService;
 import fr.esgi.fx.kanban.service.IUtilisateurService;
 import fr.esgi.fx.kanban.service.ServiceFactory;
+import fr.esgi.fx.kanban.viewmodel.ActionVue;
 import fr.esgi.fx.kanban.viewmodel.ColonneVue;
 import fr.esgi.fx.kanban.viewmodel.CommentaireVue;
 import fr.esgi.fx.kanban.viewmodel.MembreVue;
@@ -30,6 +33,7 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +49,7 @@ public class BoardServlet extends HttpServlet {
     private ICommentaireService commentaireService;
     private ITypeDeTacheService typeDeTacheService;
     private IUtilisateurService utilisateurService;
+    private IActionService actionService;
 
     @Override
     public void init() {
@@ -56,6 +61,7 @@ public class BoardServlet extends HttpServlet {
         commentaireService = ServiceFactory.commentaireService();
         typeDeTacheService = ServiceFactory.typeDeTacheService();
         utilisateurService = ServiceFactory.utilisateurService();
+        actionService = ServiceFactory.actionService();
     }
 
     // Les expressions de lien @{/...} de Thymeleaf 3.1 exigent un WebContext.
@@ -147,6 +153,7 @@ public class BoardServlet extends HttpServlet {
                 .assigneeId(tache.getUtilisateurId())
                 .pieceJointeNom(null)
                 .commentaires(commentaires(tache.getId(), cache))
+                .historique(historique(tache.getId(), cache))
                 .build();
     }
 
@@ -163,6 +170,24 @@ public class BoardServlet extends HttpServlet {
                     .date(VueSupport.formatDate(commentaire.getCreatedAt()))
                     .build());
         }
+        return vues;
+    }
+
+    private List<ActionVue> historique(Long tacheId, Map<Long, Utilisateur> cache) {
+        List<ActionVue> vues = new ArrayList<>();
+        for (Action action : actionService.findByTacheId(tacheId)) {
+            Utilisateur auteur = utilisateur(action.getUtilisateurId(), cache);
+            String pseudo = auteur == null ? "?" : auteur.getPseudo();
+            vues.add(ActionVue.builder()
+                    .description(action.getDescription())
+                    .auteur(pseudo)
+                    .initiales(VueSupport.initiales(pseudo))
+                    .couleur(VueSupport.couleurAvatar(pseudo))
+                    .date(VueSupport.formatDate(action.getCreatedAt()))
+                    .build());
+        }
+        // Ordre chronologique inverse : le changement le plus récent en premier.
+        Collections.reverse(vues);
         return vues;
     }
 

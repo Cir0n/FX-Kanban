@@ -2,20 +2,30 @@ package fr.esgi.fx.kanban.service.implementation;
 
 import fr.esgi.fx.kanban.model.Action;
 import fr.esgi.fx.kanban.model.Tache;
+import fr.esgi.fx.kanban.model.Utilisateur;
 import fr.esgi.fx.kanban.repository.IActionRepository;
 import fr.esgi.fx.kanban.repository.ITacheRepository;
+import fr.esgi.fx.kanban.repository.IUtilisateurRepository;
+import fr.esgi.fx.kanban.service.IEmailService;
 import fr.esgi.fx.kanban.service.ITacheService;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class TacheServiceImpl implements ITacheService {
 
     private final ITacheRepository tacheRepository;
     private final IActionRepository actionRepository;
+    private final IUtilisateurRepository utilisateurRepository;
+    private final IEmailService emailService;
 
-    public TacheServiceImpl(ITacheRepository tacheRepository, IActionRepository actionRepository) {
+    public TacheServiceImpl(ITacheRepository tacheRepository, IActionRepository actionRepository,
+                             IUtilisateurRepository utilisateurRepository, IEmailService emailService) {
         this.tacheRepository = tacheRepository;
         this.actionRepository = actionRepository;
+        this.utilisateurRepository = utilisateurRepository;
+        this.emailService = emailService;
     }
 
     @Override
@@ -30,7 +40,16 @@ public class TacheServiceImpl implements ITacheService {
                 .typeId(typeId)
                 .createdBy(utilisateurId)
                 .build();
-        return tacheRepository.save(tache);
+        Tache saved = tacheRepository.save(tache);
+
+        Action action = Action.builder()
+                .description("Création de la tâche")
+                .tacheId(saved.getId())
+                .utilisateurId(utilisateurId)
+                .build();
+        actionRepository.save(action);
+
+        return saved;
     }
 
     @Override
@@ -71,6 +90,11 @@ public class TacheServiceImpl implements ITacheService {
         Tache tache = tacheRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Tâche introuvable"));
 
+        String ancienName = tache.getName();
+        String ancienneDescription = tache.getDescription();
+        Long ancienTypeId = tache.getTypeId();
+        Long ancienAssigneId = tache.getUtilisateurId();
+
         tache.setName(name);
         tache.setDescription(description);
         tache.setTypeId(typeId);
@@ -78,11 +102,44 @@ public class TacheServiceImpl implements ITacheService {
         tacheRepository.update(tache);
 
         Action action = Action.builder()
-                .description("Modification de la tâche")
+                .description(construireDescriptionModification(
+                        ancienName, name, ancienneDescription, description, ancienTypeId, typeId,
+                        ancienAssigneId, assigneId))
                 .tacheId(id)
                 .utilisateurId(utilisateurId)
                 .build();
         actionRepository.save(action);
+
+        if (!Objects.equals(ancienAssigneId, assigneId) && assigneId != null) {
+            notifierAssignation(assigneId, name);
+        }
+    }
+
+    private String construireDescriptionModification(String ancienName, String name,
+                                                       String ancienneDescription, String description,
+                                                       Long ancienTypeId, Long typeId,
+                                                       Long ancienAssigneId, Long assigneId) {
+        List<String> changements = new ArrayList<>();
+        if (!Objects.equals(ancienAssigneId, assigneId)) {
+            changements.add(assigneId == null ? "Désassignation" : "Assignation");
+        }
+        if (!Objects.equals(ancienName, name)) {
+            changements.add("Renommage");
+        }
+        if (!Objects.equals(ancienneDescription, description)) {
+            changements.add("Description modifiée");
+        }
+        if (!Objects.equals(ancienTypeId, typeId)) {
+            changements.add("Type modifié");
+        }
+        return changements.isEmpty() ? "Modification de la tâche" : String.join(", ", changements);
+    }
+
+    private void notifierAssignation(Long assigneId, String nomTache) {
+        Utilisateur assigne = utilisateurRepository.findById(assigneId).orElse(null);
+        if (assigne != null) {
+            emailService.envoyerNotificationAssignation(assigne.getEmail(), nomTache);
+        }
     }
 
     @Override
