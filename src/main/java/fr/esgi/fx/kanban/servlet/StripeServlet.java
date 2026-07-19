@@ -5,21 +5,15 @@ import com.google.gson.JsonObject;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import fr.esgi.fx.kanban.configuration.StripeConfiguration;
-import fr.esgi.fx.kanban.model.Tableau;
-import fr.esgi.fx.kanban.service.IColonneService;
 import fr.esgi.fx.kanban.service.IStripeService;
-import fr.esgi.fx.kanban.service.ITableauService;
-import fr.esgi.fx.kanban.service.ServiceFactory;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.io.BufferedReader;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -39,20 +33,12 @@ import java.util.stream.Collectors;
 @WebServlet(name = "StripeServlet", value = {"/stripe/checkout"})
 public class StripeServlet extends HttpServlet {
 
-    // Colonnes créées automatiquement à l'ouverture d'un nouveau tableau.
-    private static final List<String> COLONNES_PAR_DEFAUT =
-            List.of("À faire", "En cours", "En revue", "Terminé");
-
     private static final Gson gson = new Gson();
     private IStripeService stripeService;
-    private ITableauService tableauService;
-    private IColonneService colonneService;
 
     @Override
     public void init() {
         stripeService = (IStripeService) getServletContext().getAttribute(StripeConfiguration.STRIPE_SERVICE_CONTEXT_KEY);
-        tableauService = ServiceFactory.tableauService();
-        colonneService = ServiceFactory.colonneService();
     }
 
     /**
@@ -124,31 +110,6 @@ public class StripeServlet extends HttpServlet {
         String contextPath = request.getContextPath();
 
         if ("success".equals(status)) {
-            HttpSession session = request.getSession(false);
-            String pendingName = session == null ? null : (String) session.getAttribute(BoardNewServlet.SESSION_PENDING_NAME);
-
-            if (session != null && pendingName != null) {
-                Long userId = (Long) session.getAttribute("userId");
-                String pseudo = (String) session.getAttribute("user");
-
-                // Le paiement est confirmé : on crée le tableau, rattache le créateur
-                // comme contributeur, puis génère les colonnes par défaut. La couleur
-                // n'est pas persistée (le modèle Tableau n'a pas ce champ) : elle est
-                // dérivée de l'id à l'affichage.
-                Tableau tableau = tableauService.creer(pendingName, userId);
-                tableauService.inviterContributeur(tableau.getId(), pseudo);
-                int position = 0;
-                for (String nomColonne : COLONNES_PAR_DEFAUT) {
-                    colonneService.creer(nomColonne, position++, tableau.getId());
-                }
-
-                session.removeAttribute(BoardNewServlet.SESSION_PENDING_NAME);
-                session.removeAttribute(BoardNewServlet.SESSION_PENDING_COULEUR);
-
-                response.sendRedirect(contextPath + "/board?id=" + tableau.getId());
-                return;
-            }
-
             String dashboardUrl = contextPath + "/dashboard";
             response.getWriter().write(
                     "<html><head>" +

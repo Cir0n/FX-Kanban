@@ -6,7 +6,10 @@ import java.sql.SQLException;
 
 public final class ConnectionManager {
 
-    private static final String URL = "jdbc:h2:file:./kanban_db;AUTO_SERVER=TRUE;INIT=RUNSCRIPT FROM 'classpath:import.sql'";
+    // Le schéma n'est plus initialisé ici : le rejouer à chaque connexion (aucun pool,
+    // une connexion par requête) était la cause de la lenteur de l'application. Il est
+    // désormais exécuté une seule fois au démarrage par DatabaseConfiguration.
+    private static final String URL = "jdbc:h2:file:./kanban_db;AUTO_SERVER=TRUE";
     private static final String USER = "sa";
     private static final String PASSWORD = "";
 

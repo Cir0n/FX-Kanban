@@ -6,6 +6,7 @@ import java.util.List;
 
 public interface ITableauService {
     Tableau creer(String name, Long utilisateurId);
+    Tableau creer(String name, Long utilisateurId, String stripeSessionId);
     Tableau findById(Long id);
     List<Tableau> findAllByContributeur(Long utilisateurId);
     List<Utilisateur> findContributeurs(Long tableauId);
