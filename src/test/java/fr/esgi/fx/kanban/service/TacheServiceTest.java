@@ -48,7 +48,7 @@ public class TacheServiceTest {
         String name = null;
 
         //Act & assert
-        assertThrows(IllegalArgumentException.class, () -> tacheService.creer(name, "test", 2l, 2l, 2L));
+        assertThrows(IllegalArgumentException.class, () -> tacheService.creer(name, "test", 2l, 2l, null, 2L));
 
         //Assert
         verify(tacheRepository, never()).save(any(Tache.class));
@@ -70,7 +70,7 @@ public class TacheServiceTest {
         when(tacheRepository.save(any(Tache.class))).thenReturn(tacheAttendu);
 
         //Act
-        Tache result = tacheService.creer(name, "", colonneId, null, userId);
+        Tache result = tacheService.creer(name, "", colonneId, null, null, userId);
 
 
         //Assert

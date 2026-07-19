@@ -33,7 +33,7 @@ public class TacheServiceImpl implements ITacheService {
     }
 
     @Override
-    public Tache creer(String name, String description, Long colonneId, Long typeId, Long utilisateurId) {
+    public Tache creer(String name, String description, Long colonneId, Long typeId, Long assigneeId, Long utilisateurId) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Le nom de la tâche ne peut pas être vide");
         }
@@ -42,6 +42,7 @@ public class TacheServiceImpl implements ITacheService {
                 .description(description)
                 .colonneId(colonneId)
                 .typeId(typeId)
+                .utilisateurId(assigneeId)
                 .createdBy(utilisateurId)
                 .build();
         Tache saved = tacheRepository.save(tache);
@@ -55,6 +56,10 @@ public class TacheServiceImpl implements ITacheService {
 
         LOGGER.info("Tâche '{}' créée (id={}) dans la colonne id={} par l'utilisateur id={}",
                 name, saved.getId(), colonneId, utilisateurId);
+
+        if (assigneeId != null) {
+            notifierAssignation(assigneeId, name);
+        }
         return saved;
     }
 

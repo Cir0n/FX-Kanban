@@ -348,7 +348,7 @@
                                     style="width: 100%;">
                                 <option value="">Personne</option>
                                 <option th:each="m : ${membres}"
-                                        th:value="${m.initiales}"
+                                        th:value="${m.id}"
                                         th:text="${m.initiales}">JD</option>
                             </select>
                         </div>

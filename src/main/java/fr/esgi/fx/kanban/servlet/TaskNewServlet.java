@@ -39,6 +39,7 @@ public class TaskNewServlet extends HttpServlet {
         String name = request.getParameter("name");
         String description = request.getParameter("description");
         String type = request.getParameter("type");
+        String assigneeRaw = request.getParameter("assignee");
 
         // Le nom et la colonne cible sont requis (la validation client de kanban.js
         // empêche déjà l'envoi d'un nom vide).
@@ -49,14 +50,14 @@ public class TaskNewServlet extends HttpServlet {
         }
 
         Long typeId = VueSupport.typeIdDepuisClasse(type);
+        Long assigneeId = (assigneeRaw == null || assigneeRaw.isBlank()) ? null : parseLongOrNull(assigneeRaw);
 
-        // Persistance via la couche service. L'assigné n'est pas transmis ici :
-        // le service positionne le créateur, l'assignation se fait ultérieurement.
         tacheService.creer(
                 name.trim(),
                 description == null ? "" : description.trim(),
                 colonneId,
                 typeId,
+                assigneeId,
                 userId);
 
         response.sendRedirect(request.getContextPath() + "/board?id=" + boardId + "&created=1");
@@ -70,6 +71,14 @@ public class TaskNewServlet extends HttpServlet {
             return Long.parseLong(raw.trim());
         } catch (NumberFormatException e) {
             return fallback;
+        }
+    }
+
+    private Long parseLongOrNull(String raw) {
+        try {
+            return Long.parseLong(raw.trim());
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 }
