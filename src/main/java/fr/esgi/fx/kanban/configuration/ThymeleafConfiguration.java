@@ -2,16 +2,19 @@ package fr.esgi.fx.kanban.configuration;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.WebApplicationTemplateResolver;
 import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 @WebListener
 public class ThymeleafConfiguration implements ServletContextListener {
+    private static final Logger LOGGER = LogManager.getLogger(ThymeleafConfiguration.class);
     private JakartaServletWebApplication application;
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("Initialisation Thymeleaf");
+        LOGGER.info("Initialisation Thymeleaf");
         application = JakartaServletWebApplication.buildApplication(sce.getServletContext());
         TemplateEngine templateEngine = new TemplateEngine();
         WebApplicationTemplateResolver templateResolver = new

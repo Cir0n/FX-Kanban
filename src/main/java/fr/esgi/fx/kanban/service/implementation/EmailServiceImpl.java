@@ -10,6 +10,8 @@ import jakarta.mail.Session;
 import jakarta.mail.Transport;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Properties;
 
@@ -20,6 +22,8 @@ import java.util.Properties;
  * assignation de tâche ne doit jamais échouer à cause d'un email non envoyé).
  */
 public class EmailServiceImpl implements IEmailService {
+
+    private static final Logger LOGGER = LogManager.getLogger(EmailServiceImpl.class);
 
     private final String host;
     private final String port;
@@ -39,7 +43,7 @@ public class EmailServiceImpl implements IEmailService {
                 && password != null && !password.isBlank();
 
         if (!configure) {
-            System.err.println("[EMAIL] Configuration SMTP absente ou incomplète, "
+            LOGGER.warn("Configuration SMTP absente ou incomplète, "
                     + "les notifications par email sont désactivées.");
         }
     }
@@ -58,8 +62,7 @@ public class EmailServiceImpl implements IEmailService {
             message.setText("Vous avez été assigné à la tâche « " + nomTache + " ».");
             Transport.send(message);
         } catch (MessagingException e) {
-            System.err.println("[EMAIL] Échec de l'envoi de la notification à "
-                    + destinataire + " : " + e.getMessage());
+            LOGGER.error("Échec de l'envoi de la notification à {}", destinataire, e);
         }
     }
 

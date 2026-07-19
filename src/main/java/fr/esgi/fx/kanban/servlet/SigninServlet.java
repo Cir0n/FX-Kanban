@@ -8,18 +8,21 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 @WebServlet(name = "SigninServlet", value = {"/signIn"})
 public class SigninServlet extends HttpServlet {
 
+    private static final Logger LOGGER = LogManager.getLogger(SigninServlet.class);
     private TemplateEngine templateEngine = null;
     private final UserRepository userRepository = UserRepository.getInstance();
 
     @Override
     public void init() {
-        System.out.println("Initialisation de la servlet SigninServlet");
+        LOGGER.info("Initialisation de la servlet SigninServlet");
         templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");
     }
 

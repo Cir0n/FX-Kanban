@@ -9,15 +9,18 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @WebServlet(name = "TaskServlet", value = {"/task"})
 public class TaskServlet extends HttpServlet {
+    private static final Logger LOGGER = LogManager.getLogger(TaskServlet.class);
     private String message;
     private TemplateEngine templateEngine = null;
 
     @Override
     public void init() {
-        System.out.println("Initialisation de la servlet TaskServlet");
+        LOGGER.info("Initialisation de la servlet TaskServlet");
         message = "Hello Kanban";
         // On récupère le moteur de template dans le contexte des servlets
         templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");

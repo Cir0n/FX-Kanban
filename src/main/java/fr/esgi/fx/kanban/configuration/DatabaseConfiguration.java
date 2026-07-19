@@ -4,6 +4,8 @@ import fr.esgi.fx.kanban.repository.ConnectionManager;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,6 +22,7 @@ import java.sql.Statement;
 @WebListener
 public class DatabaseConfiguration implements ServletContextListener {
 
+    private static final Logger LOGGER = LogManager.getLogger(DatabaseConfiguration.class);
     private static final String INIT_SCRIPT = "classpath:import.sql";
 
     @Override
@@ -27,7 +30,7 @@ public class DatabaseConfiguration implements ServletContextListener {
         try (Connection conn = ConnectionManager.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("RUNSCRIPT FROM '" + INIT_SCRIPT + "'");
-            System.out.println("[DB] Schéma initialisé avec succès (" + INIT_SCRIPT + ").");
+            LOGGER.info("Schéma initialisé avec succès ({}).", INIT_SCRIPT);
         } catch (SQLException e) {
             throw new IllegalStateException(
                     "Échec de l'initialisation du schéma de la base : " + e.getMessage(), e);
