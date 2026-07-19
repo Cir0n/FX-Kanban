@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.WebServlet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -14,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 
 @WebServlet(name = "taskDeleteServlet", value = {"/task/delete"})
 public class TaskDeleteServlet extends HttpServlet {
+
+    private static final Logger LOGGER = LogManager.getLogger(TaskDeleteServlet.class);
 
     private ITacheService tacheService;
 
@@ -42,6 +46,7 @@ public class TaskDeleteServlet extends HttpServlet {
             tacheService.supprimer(taskId);
             response.sendRedirect(request.getContextPath() + "/board?id=" + boardId + "&deleted=1");
         } catch (RuntimeException e) {
+            LOGGER.error("Échec de la suppression de la tâche id={} du tableau id={}", taskId, boardId, e);
             String encoded = URLEncoder.encode(
                     "Impossible de supprimer la tâche pour le moment.", StandardCharsets.UTF_8);
             response.sendRedirect(request.getContextPath() + "/board?id=" + boardId + "&error=" + encoded);

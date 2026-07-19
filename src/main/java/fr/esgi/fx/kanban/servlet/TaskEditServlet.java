@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.WebServlet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -15,6 +17,8 @@ import java.nio.charset.StandardCharsets;
 
 @WebServlet(name = "taskEditServlet", value = {"/task/edit"})
 public class TaskEditServlet extends HttpServlet {
+
+    private static final Logger LOGGER = LogManager.getLogger(TaskEditServlet.class);
 
     private ITacheService tacheService;
 
@@ -58,6 +62,7 @@ public class TaskEditServlet extends HttpServlet {
                     userId);
             response.sendRedirect(request.getContextPath() + "/board?id=" + boardId + "&updated=1");
         } catch (IllegalArgumentException e) {
+            LOGGER.warn("Échec de la modification de la tâche id={} du tableau id={} : {}", taskId, boardId, e.getMessage());
             redirectWithError(request, response, boardId, e.getMessage());
         }
     }

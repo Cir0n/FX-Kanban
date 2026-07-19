@@ -8,12 +8,16 @@ import fr.esgi.fx.kanban.repository.ITacheRepository;
 import fr.esgi.fx.kanban.repository.IUtilisateurRepository;
 import fr.esgi.fx.kanban.service.IEmailService;
 import fr.esgi.fx.kanban.service.ITacheService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class TacheServiceImpl implements ITacheService {
+
+    private static final Logger LOGGER = LogManager.getLogger(TacheServiceImpl.class);
 
     private final ITacheRepository tacheRepository;
     private final IActionRepository actionRepository;
@@ -49,6 +53,8 @@ public class TacheServiceImpl implements ITacheService {
                 .build();
         actionRepository.save(action);
 
+        LOGGER.info("Tâche '{}' créée (id={}) dans la colonne id={} par l'utilisateur id={}",
+                name, saved.getId(), colonneId, utilisateurId);
         return saved;
     }
 
@@ -80,6 +86,9 @@ public class TacheServiceImpl implements ITacheService {
                 .colonneCibleId(nouvelleColonneId)
                 .build();
         actionRepository.save(action);
+
+        LOGGER.info("Tâche id={} déplacée de la colonne id={} vers la colonne id={} par l'utilisateur id={}",
+                tacheId, ancienneColonneId, nouvelleColonneId, utilisateurId);
     }
 
     @Override
@@ -110,6 +119,8 @@ public class TacheServiceImpl implements ITacheService {
                 .build();
         actionRepository.save(action);
 
+        LOGGER.info("Tâche id={} modifiée par l'utilisateur id={} : {}", id, utilisateurId, action.getDescription());
+
         if (!Objects.equals(ancienAssigneId, assigneId) && assigneId != null) {
             notifierAssignation(assigneId, name);
         }
@@ -139,11 +150,14 @@ public class TacheServiceImpl implements ITacheService {
         Utilisateur assigne = utilisateurRepository.findById(assigneId).orElse(null);
         if (assigne != null) {
             emailService.envoyerNotificationAssignation(assigne.getEmail(), nomTache);
+        } else {
+            LOGGER.warn("Utilisateur assigné id={} introuvable, notification d'assignation non envoyée", assigneId);
         }
     }
 
     @Override
     public void supprimer(Long id) {
         tacheRepository.delete(id);
+        LOGGER.info("Tâche id={} supprimée", id);
     }
 }

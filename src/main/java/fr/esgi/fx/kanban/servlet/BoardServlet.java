@@ -26,6 +26,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.WebServlet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.IWebExchange;
@@ -40,6 +42,8 @@ import java.util.Map;
 
 @WebServlet(name = "boardServlet", value = {"/board"})
 public class BoardServlet extends HttpServlet {
+
+    private static final Logger LOGGER = LogManager.getLogger(BoardServlet.class);
 
     private TemplateEngine templateEngine;
     private JakartaServletWebApplication application;
@@ -87,6 +91,8 @@ public class BoardServlet extends HttpServlet {
         try {
             tableau = tableauService.findById(tableauId);
         } catch (IllegalArgumentException e) {
+            LOGGER.warn("Accès refusé au tableau id={} pour l'utilisateur id={} : {}",
+                    tableauId, session.getAttribute("userId"), e.getMessage());
             response.sendRedirect(request.getContextPath() + "/dashboard");
             return;
         }
@@ -214,6 +220,7 @@ public class BoardServlet extends HttpServlet {
         try {
             utilisateur = utilisateurService.findById(id);
         } catch (IllegalArgumentException e) {
+            LOGGER.warn("Utilisateur référencé id={} introuvable lors de l'affichage du tableau", id);
             utilisateur = null;
         }
         cache.put(id, utilisateur);

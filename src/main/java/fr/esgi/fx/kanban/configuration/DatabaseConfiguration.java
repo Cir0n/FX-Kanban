@@ -32,6 +32,7 @@ public class DatabaseConfiguration implements ServletContextListener {
             stmt.execute("RUNSCRIPT FROM '" + INIT_SCRIPT + "'");
             LOGGER.info("Schéma initialisé avec succès ({}).", INIT_SCRIPT);
         } catch (SQLException e) {
+            LOGGER.fatal("Échec de l'initialisation du schéma de la base ({})", INIT_SCRIPT, e);
             throw new IllegalStateException(
                     "Échec de l'initialisation du schéma de la base : " + e.getMessage(), e);
         }

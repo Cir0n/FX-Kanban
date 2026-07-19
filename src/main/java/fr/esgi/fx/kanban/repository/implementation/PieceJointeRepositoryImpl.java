@@ -4,12 +4,16 @@ import fr.esgi.fx.kanban.model.PieceJointe;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.IPieceJointeRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PieceJointeRepositoryImpl implements IPieceJointeRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(PieceJointeRepositoryImpl.class);
 
     @Override
     public PieceJointe save(PieceJointe pieceJointe) {
@@ -29,6 +33,7 @@ public class PieceJointeRepositoryImpl implements IPieceJointeRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde de la pièce jointe pour la tâche id={}", pieceJointe.getTacheId(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde de la pièce jointe", e);
         }
         return pieceJointe;
@@ -47,6 +52,7 @@ public class PieceJointeRepositoryImpl implements IPieceJointeRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération des pièces jointes de la tâche id={}", tacheId, e);
             throw new RuntimeException("Erreur lors de la récupération des pièces jointes", e);
         }
         return pieces;
@@ -60,6 +66,7 @@ public class PieceJointeRepositoryImpl implements IPieceJointeRepository {
             stmt.setLong(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la suppression de la pièce jointe id={}", id, e);
             throw new RuntimeException("Erreur lors de la suppression de la pièce jointe", e);
         }
     }

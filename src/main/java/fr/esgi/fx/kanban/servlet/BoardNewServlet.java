@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.WebServlet;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.IWebExchange;
@@ -23,6 +25,8 @@ import java.util.List;
 
 @WebServlet(name = "boardNewServlet", value = {"/board/new"})
 public class BoardNewServlet extends HttpServlet {
+
+    private static final Logger LOGGER = LogManager.getLogger(BoardNewServlet.class);
 
     // Palette proposée pour la barre de couleur du tableau (alignée sur le design system).
     private static final List<String> COULEURS = List.of(
@@ -144,6 +148,7 @@ public class BoardNewServlet extends HttpServlet {
 
             response.sendRedirect(checkout.getUrl());
         } catch (StripeException e) {
+            LOGGER.error("Échec du démarrage du paiement pour la création du tableau '{}'", trimmedName, e);
             afficherFormulaireErreur(request, response, name, couleur, null,
                     "Impossible de démarrer le paiement : " + e.getMessage());
         }
@@ -168,6 +173,8 @@ public class BoardNewServlet extends HttpServlet {
             Session checkout = stripeService.retrieveSession(sessionId);
             paye = checkout != null && "paid".equals(checkout.getPaymentStatus());
         } catch (StripeException e) {
+            LOGGER.error("Impossible de vérifier le paiement Stripe id={} pour le tableau '{}' ; " +
+                    "traité comme non payé", sessionId, name, e);
             paye = false;
         }
 

@@ -83,6 +83,7 @@ public class SigninServlet extends HttpServlet {
 
         // Validation : pseudo déjà utilisé
         if (userRepository.existsByName(name.trim())) {
+            LOGGER.warn("Inscription refusée : pseudo '{}' déjà utilisé", name.trim());
             context.setVariable("error", "Ce pseudo est déjà utilisé.");
             response.setContentType("text/html;charset=UTF-8");
             templateEngine.process("signin", context, response.getWriter());
@@ -97,6 +98,7 @@ public class SigninServlet extends HttpServlet {
                 .build();
 
         userRepository.save(user);
+        LOGGER.info("Nouvel utilisateur inscrit : {}", user.getName());
 
         // Redirection vers la page de connexion avec message de succès
         response.sendRedirect(request.getContextPath() + "/logIn?success=1");

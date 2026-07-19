@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
@@ -19,6 +21,8 @@ import java.io.IOException;
  */
 @WebServlet(name = "taskMoveServlet", value = {"/task/move"})
 public class TaskMoveServlet extends HttpServlet {
+
+    private static final Logger LOGGER = LogManager.getLogger(TaskMoveServlet.class);
 
     private ITacheService tacheService;
 
@@ -48,6 +52,7 @@ public class TaskMoveServlet extends HttpServlet {
             tacheService.deplacer(taskId, colonneId, userId);
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         } catch (IllegalArgumentException e) {
+            LOGGER.warn("Échec du déplacement de la tâche id={} vers la colonne id={} : {}", taskId, colonneId, e.getMessage());
             response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         }
     }

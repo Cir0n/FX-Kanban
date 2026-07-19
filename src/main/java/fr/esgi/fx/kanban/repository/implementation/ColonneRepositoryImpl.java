@@ -4,6 +4,8 @@ import fr.esgi.fx.kanban.model.Colonne;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.IColonneRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class ColonneRepositoryImpl implements IColonneRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(ColonneRepositoryImpl.class);
 
     @Override
     public Colonne save(Colonne colonne) {
@@ -29,6 +33,7 @@ public class ColonneRepositoryImpl implements IColonneRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde de la colonne du tableau id={}", colonne.getTableauId(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde de la colonne", e);
         }
         return colonne;
@@ -46,6 +51,7 @@ public class ColonneRepositoryImpl implements IColonneRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche de la colonne id={}", id, e);
             throw new RuntimeException("Erreur lors de la recherche de la colonne", e);
         }
         return Optional.empty();
@@ -62,6 +68,7 @@ public class ColonneRepositoryImpl implements IColonneRepository {
                 colonnes.add(mapRow(rs));
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération des colonnes", e);
             throw new RuntimeException("Erreur lors de la récupération des colonnes", e);
         }
         return colonnes;
@@ -80,6 +87,7 @@ public class ColonneRepositoryImpl implements IColonneRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche des colonnes du tableau id={}", tableauId, e);
             throw new RuntimeException("Erreur lors de la recherche des colonnes", e);
         }
         return colonnes;

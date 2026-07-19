@@ -11,6 +11,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
 @WebServlet(name = "StripeServlet", value = {"/stripe/checkout"})
 public class StripeServlet extends HttpServlet {
 
+    private static final Logger LOGGER = LogManager.getLogger(StripeServlet.class);
     private static final Gson gson = new Gson();
     private IStripeService stripeService;
 
@@ -88,6 +91,7 @@ public class StripeServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(result));
 
         } catch (StripeException e) {
+            LOGGER.error("Échec de la création de la session de paiement Stripe via /stripe/checkout", e);
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             JsonObject error = new JsonObject();
             error.addProperty("error", e.getMessage());

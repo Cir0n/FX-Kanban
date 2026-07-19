@@ -4,6 +4,8 @@ import fr.esgi.fx.kanban.model.TypeDeTache;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.ITypeDeTacheRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class TypeDeTacheRepositoryImpl implements ITypeDeTacheRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(TypeDeTacheRepositoryImpl.class);
 
     @Override
     public List<TypeDeTache> findAll() {
@@ -23,6 +27,7 @@ public class TypeDeTacheRepositoryImpl implements ITypeDeTacheRepository {
                 types.add(mapRow(rs));
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération des types de tâche", e);
             throw new RuntimeException("Erreur lors de la récupération des types de tâche", e);
         }
         return types;
@@ -40,6 +45,7 @@ public class TypeDeTacheRepositoryImpl implements ITypeDeTacheRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche du type de tâche id={}", id, e);
             throw new RuntimeException("Erreur lors de la recherche du type de tâche", e);
         }
         return Optional.empty();
@@ -61,6 +67,7 @@ public class TypeDeTacheRepositoryImpl implements ITypeDeTacheRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde du type de tâche {}", typeDeTache.getName(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde du type de tâche", e);
         }
         return typeDeTache;

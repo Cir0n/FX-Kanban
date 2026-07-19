@@ -4,6 +4,8 @@ import fr.esgi.fx.kanban.model.Tache;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.ITacheRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class TacheRepositoryImpl implements ITacheRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(TacheRepositoryImpl.class);
 
     @Override
     public Tache save(Tache tache) {
@@ -36,6 +40,7 @@ public class TacheRepositoryImpl implements ITacheRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde de la tâche dans la colonne id={}", tache.getColonneId(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde de la tâche", e);
         }
         return tache;
@@ -53,6 +58,7 @@ public class TacheRepositoryImpl implements ITacheRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche de la tâche id={}", id, e);
             throw new RuntimeException("Erreur lors de la recherche de la tâche", e);
         }
         return Optional.empty();
@@ -69,6 +75,7 @@ public class TacheRepositoryImpl implements ITacheRepository {
                 taches.add(mapRow(rs));
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération des tâches", e);
             throw new RuntimeException("Erreur lors de la récupération des tâches", e);
         }
         return taches;
@@ -87,6 +94,7 @@ public class TacheRepositoryImpl implements ITacheRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche des tâches de la colonne id={}", colonneId, e);
             throw new RuntimeException("Erreur lors de la recherche des tâches", e);
         }
         return taches;
@@ -109,6 +117,7 @@ public class TacheRepositoryImpl implements ITacheRepository {
             stmt.setLong(6, tache.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la mise à jour de la tâche id={}", tache.getId(), e);
             throw new RuntimeException("Erreur lors de la mise à jour de la tâche", e);
         }
     }
@@ -121,6 +130,7 @@ public class TacheRepositoryImpl implements ITacheRepository {
             stmt.setLong(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la suppression de la tâche id={}", id, e);
             throw new RuntimeException("Erreur lors de la suppression de la tâche", e);
         }
     }

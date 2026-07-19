@@ -4,6 +4,8 @@ import fr.esgi.fx.kanban.model.Utilisateur;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.IUtilisateurRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(UtilisateurRepositoryImpl.class);
 
     @Override
     public Utilisateur save(Utilisateur utilisateur) {
@@ -29,6 +33,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde de l'utilisateur {}", utilisateur.getPseudo(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde de l'utilisateur", e);
         }
         return utilisateur;
@@ -46,6 +51,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche de l'utilisateur id={}", id, e);
             throw new RuntimeException("Erreur lors de la recherche de l'utilisateur", e);
         }
         return Optional.empty();
@@ -63,6 +69,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche de l'utilisateur par pseudo={}", pseudo, e);
             throw new RuntimeException("Erreur lors de la recherche de l'utilisateur", e);
         }
         return Optional.empty();
@@ -80,6 +87,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche de l'utilisateur par email={}", email, e);
             throw new RuntimeException("Erreur lors de la recherche de l'utilisateur par email", e);
         }
         return Optional.empty();
@@ -96,6 +104,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
                 utilisateurs.add(mapRow(rs));
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération des utilisateurs", e);
             throw new RuntimeException("Erreur lors de la récupération des utilisateurs", e);
         }
         return utilisateurs;
@@ -112,6 +121,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
             stmt.setLong(4, utilisateur.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la mise à jour de l'utilisateur id={}", utilisateur.getId(), e);
             throw new RuntimeException("Erreur lors de la mise à jour de l'utilisateur", e);
         }
     }
@@ -124,6 +134,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
             stmt.setLong(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la suppression de l'utilisateur id={}", id, e);
             throw new RuntimeException("Erreur lors de la suppression de l'utilisateur", e);
         }
     }
@@ -138,6 +149,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
                 return rs.next() && rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la vérification du pseudo={}", pseudo, e);
             throw new RuntimeException("Erreur lors de la vérification du pseudo", e);
         }
     }
@@ -152,6 +164,7 @@ public class UtilisateurRepositoryImpl implements IUtilisateurRepository {
                 return rs.next() && rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la vérification de l'email={}", email, e);
             throw new RuntimeException("Erreur lors de la vérification de l'email", e);
         }
     }

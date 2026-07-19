@@ -4,12 +4,16 @@ import fr.esgi.fx.kanban.model.Action;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.IActionRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ActionRepositoryImpl implements IActionRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(ActionRepositoryImpl.class);
 
     @Override
     public Action save(Action action) {
@@ -38,6 +42,7 @@ public class ActionRepositoryImpl implements IActionRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde de l'action pour la tâche id={}", action.getTacheId(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde de l'action", e);
         }
         return action;
@@ -56,6 +61,7 @@ public class ActionRepositoryImpl implements IActionRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération de l'historique de la tâche id={}", tacheId, e);
             throw new RuntimeException("Erreur lors de la récupération de l'historique", e);
         }
         return actions;

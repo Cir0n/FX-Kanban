@@ -4,12 +4,16 @@ import fr.esgi.fx.kanban.model.Commentaire;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.ICommentaireRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CommentaireRepositoryImpl implements ICommentaireRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(CommentaireRepositoryImpl.class);
 
     @Override
     public Commentaire save(Commentaire commentaire) {
@@ -28,6 +32,7 @@ public class CommentaireRepositoryImpl implements ICommentaireRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde du commentaire sur la tâche id={}", commentaire.getTacheId(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde du commentaire", e);
         }
         return commentaire;
@@ -46,6 +51,7 @@ public class CommentaireRepositoryImpl implements ICommentaireRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération des commentaires de la tâche id={}", tacheId, e);
             throw new RuntimeException("Erreur lors de la récupération des commentaires", e);
         }
         return commentaires;

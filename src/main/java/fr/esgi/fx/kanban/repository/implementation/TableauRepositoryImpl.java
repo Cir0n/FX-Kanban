@@ -5,6 +5,8 @@ import fr.esgi.fx.kanban.model.Utilisateur;
 import fr.esgi.fx.kanban.repository.ConnectionManager;
 import fr.esgi.fx.kanban.repository.ITableauRepository;
 import fr.esgi.fx.kanban.repository.Requetes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -12,6 +14,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class TableauRepositoryImpl implements ITableauRepository {
+
+    private static final Logger LOGGER = LogManager.getLogger(TableauRepositoryImpl.class);
 
     @Override
     public Tableau save(Tableau tableau) {
@@ -30,6 +34,7 @@ public class TableauRepositoryImpl implements ITableauRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la sauvegarde du tableau créé par l'utilisateur id={}", tableau.getCreatedBy(), e);
             throw new RuntimeException("Erreur lors de la sauvegarde du tableau", e);
         }
         return tableau;
@@ -47,6 +52,7 @@ public class TableauRepositoryImpl implements ITableauRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche du tableau id={}", id, e);
             throw new RuntimeException("Erreur lors de la recherche du tableau", e);
         }
         return Optional.empty();
@@ -65,6 +71,7 @@ public class TableauRepositoryImpl implements ITableauRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la recherche des tableaux du contributeur id={}", utilisateurId, e);
             throw new RuntimeException("Erreur lors de la recherche des tableaux", e);
         }
         return tableaux;
@@ -78,6 +85,7 @@ public class TableauRepositoryImpl implements ITableauRepository {
             stmt.setLong(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la suppression du tableau id={}", id, e);
             throw new RuntimeException("Erreur lors de la suppression du tableau", e);
         }
     }
@@ -91,6 +99,7 @@ public class TableauRepositoryImpl implements ITableauRepository {
             stmt.setLong(2, tableauId);
             stmt.executeUpdate();
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de l'ajout du contributeur id={} au tableau id={}", utilisateurId, tableauId, e);
             throw new RuntimeException("Erreur lors de l'ajout du contributeur", e);
         }
     }
@@ -114,6 +123,7 @@ public class TableauRepositoryImpl implements ITableauRepository {
                 }
             }
         } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération des contributeurs du tableau id={}", tableauId, e);
             throw new RuntimeException("Erreur lors de la récupération des contributeurs", e);
         }
         return contributeurs;
