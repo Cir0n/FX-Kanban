@@ -134,10 +134,19 @@ public class BoardServlet extends HttpServlet {
 
     private List<ColonneVue> colonnes(Long tableauId, Map<Long, Utilisateur> cache) {
         List<ColonneVue> vues = new ArrayList<>();
-        for (Colonne colonne : colonneService.findByTableauId(tableauId)) {
+        List<Colonne> colonnesDuTableau = colonneService.findByTableauId(tableauId);
+
+        // Noms des colonnes du tableau, pour résoudre l'état source/cible d'un
+        // déplacement dans l'historique sans requête supplémentaire par entrée.
+        Map<Long, String> colonneNoms = new HashMap<>();
+        for (Colonne colonne : colonnesDuTableau) {
+            colonneNoms.put(colonne.getId(), colonne.getName());
+        }
+
+        for (Colonne colonne : colonnesDuTableau) {
             List<TacheVue> taches = new ArrayList<>();
             for (Tache tache : tacheService.findByColonneId(colonne.getId())) {
-                taches.add(mapTache(tache, cache));
+                taches.add(mapTache(tache, cache, colonneNoms));
             }
             vues.add(ColonneVue.builder()
                     .id(colonne.getId())
@@ -148,7 +157,7 @@ public class BoardServlet extends HttpServlet {
         return vues;
     }
 
-    private TacheVue mapTache(Tache tache, Map<Long, Utilisateur> cache) {
+    private TacheVue mapTache(Tache tache, Map<Long, Utilisateur> cache, Map<Long, String> colonneNoms) {
         String typeLabel = typeDeTacheService.findById(tache.getTypeId())
                 .map(TypeDeTache::getName)
                 .orElse("Standard");
@@ -164,7 +173,7 @@ public class BoardServlet extends HttpServlet {
                 .assigneeId(tache.getUtilisateurId())
                 .pieceJointes(pieceJointes(tache.getId()))
                 .commentaires(commentaires(tache.getId(), cache))
-                .historique(historique(tache.getId(), cache))
+                .historique(historique(tache.getId(), cache, colonneNoms))
                 .build();
     }
 
@@ -198,13 +207,13 @@ public class BoardServlet extends HttpServlet {
         return vues;
     }
 
-    private List<ActionVue> historique(Long tacheId, Map<Long, Utilisateur> cache) {
+    private List<ActionVue> historique(Long tacheId, Map<Long, Utilisateur> cache, Map<Long, String> colonneNoms) {
         List<ActionVue> vues = new ArrayList<>();
         for (Action action : actionService.findByTacheId(tacheId)) {
             Utilisateur auteur = utilisateur(action.getUtilisateurId(), cache);
             String pseudo = auteur == null ? "?" : auteur.getPseudo();
             vues.add(ActionVue.builder()
-                    .description(action.getDescription())
+                    .description(descriptionAction(action, colonneNoms))
                     .auteur(pseudo)
                     .initiales(VueSupport.initiales(pseudo))
                     .couleur(VueSupport.couleurAvatar(pseudo))
@@ -214,6 +223,20 @@ public class BoardServlet extends HttpServlet {
         // Ordre chronologique inverse : le changement le plus récent en premier.
         Collections.reverse(vues);
         return vues;
+    }
+
+    /**
+     * Pour un déplacement, reconstruit un libellé avec l'état précédent et le
+     * nouvel état de la tâche (ex. « Déplacement de « À faire » vers « En cours » »),
+     * plutôt que le libellé générique enregistré en base.
+     */
+    private String descriptionAction(Action action, Map<Long, String> colonneNoms) {
+        if (action.getColonneSourceId() == null || action.getColonneCibleId() == null) {
+            return action.getDescription();
+        }
+        String source = colonneNoms.getOrDefault(action.getColonneSourceId(), "colonne inconnue");
+        String cible = colonneNoms.getOrDefault(action.getColonneCibleId(), "colonne inconnue");
+        return "Déplacement de « " + source + " » vers « " + cible + " »";
     }
 
     private MembreVue avatar(Utilisateur utilisateur) {
