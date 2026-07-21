@@ -325,6 +325,24 @@
     padding: 24px 24px 0;
 }
 
+/* Boutons compacts et harmonisés dans la modale de détail de tâche
+   (les .btn-*-kanban standards, en 52px, sont pensés pour les formulaires
+   pleine largeur et paraissent démesurés une fois réutilisés ici). */
+.task-modal-header .btn-outline-kanban {
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+}
+
+.task-edit .form-actions .btn-outline-kanban,
+.task-edit .form-actions .btn-primary-kanban,
+.task-edit .form-actions .btn-danger-kanban {
+    width: auto;
+    height: 38px;
+    padding: 0 18px;
+    font-size: 13px;
+}
+
 .task-modal-title {
     font-size: 20px;
     font-weight: 600;

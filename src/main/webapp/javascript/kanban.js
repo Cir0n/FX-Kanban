@@ -129,9 +129,13 @@ document.addEventListener('DOMContentLoaded', function () {
         // Repasse en mode lecture pour la prochaine ouverture de cette modale.
         var view = openModalEl.querySelector('[data-task-view]');
         var editForm = openModalEl.querySelector('[data-task-edit]');
+        var editBtn = openModalEl.querySelector('[data-edit-task]');
         if (view && editForm) {
             view.hidden = false;
             editForm.hidden = true;
+        }
+        if (editBtn) {
+            editBtn.hidden = false;
         }
         openModalEl.hidden = true;
         document.body.style.overflow = '';
@@ -213,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var editForm = modal.querySelector('[data-task-edit]');
             view.hidden = true;
             editForm.hidden = false;
+            btn.hidden = true;
         });
     });
 
@@ -221,8 +226,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var modal = btn.closest('.task-modal');
             var view = modal.querySelector('[data-task-view]');
             var editForm = modal.querySelector('[data-task-edit]');
+            var editBtn = modal.querySelector('[data-edit-task]');
             view.hidden = false;
             editForm.hidden = true;
+            if (editBtn) {
+                editBtn.hidden = false;
+            }
         });
     });
 
