@@ -17,6 +17,35 @@
         <lombok.version>1.18.42</lombok.version>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <env>dev</env>
+                <db.file>kanban_db</db.file>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>preprod</id>
+            <properties>
+                <env>preprod</env>
+                <db.file>kanban_db_preprod</db.file>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>prod</id>
+            <properties>
+                <env>prod</env>
+                <db.file>kanban_db_prod</db.file>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>jakarta.servlet</groupId>
@@ -46,6 +75,13 @@
             <artifactId>gson</artifactId>
             <version>2.13.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>net.datafaker</groupId>
+            <artifactId>datafaker</artifactId>
+            <version>2.4.3</version>
+        </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -89,6 +125,22 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>db.properties</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>db.properties</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

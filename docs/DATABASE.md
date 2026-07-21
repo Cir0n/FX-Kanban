@@ -39,6 +39,25 @@ La base de données H2 est configurée pour se créer et s'initialiser automatiq
 
 Ce paramètre force H2 à exécuter le script `src/main/resources/import.sql` lors de la toute première connexion à la base. Ce script est responsable de la création des tables et de l'insertion des données initiales.
 
+### Sélection de la base par profil Maven
+
+Trois profils Maven contrôlent le nom du fichier H2 utilisé, via le fichier
+filtré `src/main/resources/db.properties` (placeholders `${env}`/`${db.file}`
+substitués au build) :
+
+| Profil (`-P...`) | Fichier H2 résultant |
+|---|---|
+| `dev` (actif par défaut) | `kanban_db` |
+| `preprod` | `kanban_db_preprod` |
+| `prod` | `kanban_db_prod` |
+
+`ConnectionManager` lit ces valeurs en dernier recours : si un fichier `.env`
+local existe (`DB_URL`/`DB_USER`/`DB_PASSWORD`), il continue de primer sur le
+profil Maven actif, comme avant cette évolution. Le paramètre
+`INIT=RUNSCRIPT FROM 'classpath:import.sql'` reste inchangé dans les 3 cas :
+`import.sql` s'exécute normalement à la première connexion, quel que soit le
+fichier H2 ciblé.
+
 ### Structure de la Base de Données
 
 Le script `import.sql` crée les tables suivantes :
