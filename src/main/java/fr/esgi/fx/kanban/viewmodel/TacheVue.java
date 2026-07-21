@@ -16,7 +16,7 @@ public class TacheVue {
     private String typeLabel;    // libellé affiché dans le badge (ex. "Bug")
     private MembreVue assignee;  // membre affecté (avatar), peut être null
     private Long assigneeId;     // id du membre affecté, utilisé pour pré-remplir le formulaire d'édition
-    private String pieceJointeNom; // nom du fichier joint, null si aucune pièce jointe
+    private List<PieceJointeVue> pieceJointes;
     private List<CommentaireVue> commentaires;
     private List<ActionVue> historique;
 }

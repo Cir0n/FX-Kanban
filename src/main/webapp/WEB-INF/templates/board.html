@@ -119,11 +119,12 @@
                                 </svg>
                                 <span th:text="${#lists.size(tache.commentaires)}">0</span>
                             </span>
-                            <span class="task-card-icon" th:if="${tache.pieceJointeNom != null}">
+                            <span class="task-card-icon" th:if="${!#lists.isEmpty(tache.pieceJointes)}">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
                                      stroke="currentColor" stroke-width="1.7">
                                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                                 </svg>
+                                <span th:text="${#lists.size(tache.pieceJointes)}">0</span>
                             </span>
                         </div>
                     </div>
@@ -168,15 +169,37 @@
                                     <p class="modal-desc" th:text="${tache.description}">Description.</p>
                                 </div>
 
-                                <div class="modal-section" th:if="${tache.pieceJointeNom != null}">
-                                    <div class="modal-section-title">Pièce jointe</div>
-                                    <span class="attachment-chip">
-                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-                                             stroke="currentColor" stroke-width="1.7">
-                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-                                        </svg>
-                                        <span th:text="${tache.pieceJointeNom}">fichier.pdf</span>
-                                    </span>
+                                <div class="modal-section">
+                                    <div class="modal-section-title">
+                                        Pièces jointes (<span th:text="${#lists.size(tache.pieceJointes)}">0</span>)
+                                    </div>
+
+                                    <p class="modal-empty" th:if="${#lists.isEmpty(tache.pieceJointes)}">
+                                        Aucune pièce jointe pour l'instant.
+                                    </p>
+
+                                    <div class="attachment-list" th:if="${!#lists.isEmpty(tache.pieceJointes)}">
+                                        <div th:each="pj : ${tache.pieceJointes}" class="attachment-chip">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                                 stroke="currentColor" stroke-width="1.7">
+                                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                            </svg>
+                                            <a th:href="@{/task/attachment(id=${pj.id})}" th:text="${pj.nomFichier}"
+                                               target="_blank" rel="noopener">fichier.pdf</a>
+                                            <span class="attachment-taille" th:text="${pj.taille}">128 Ko</span>
+                                            <button type="button" class="attachment-remove" data-delete-attachment
+                                                    th:attr="data-attachment-id=${pj.id}"
+                                                    aria-label="Supprimer la pièce jointe">&times;</button>
+                                        </div>
+                                    </div>
+
+                                    <form class="attachment-upload" th:action="@{/task/attachment/upload}" method="post"
+                                          enctype="multipart/form-data" data-attachment-upload novalidate>
+                                        <input type="hidden" name="boardId" th:value="${boardId}">
+                                        <input type="hidden" name="taskId" th:value="${tache.id}">
+                                        <input type="file" name="file" class="attachment-file-input" required>
+                                        <button type="submit" class="btn-outline-kanban attachment-upload-btn">Ajouter</button>
+                                    </form>
                                 </div>
 
                                 <div class="modal-section">
@@ -403,6 +426,12 @@
     <form id="deleteTaskForm" th:action="@{/task/delete}" method="post" style="display:none;">
         <input type="hidden" name="boardId" th:value="${boardId}">
         <input type="hidden" name="taskId" id="deleteTaskId">
+    </form>
+
+    <!-- Formulaire de suppression de pièce jointe partagé, rempli via JS avant soumission -->
+    <form id="deleteAttachmentForm" th:action="@{/task/attachment/delete}" method="post" style="display:none;">
+        <input type="hidden" name="boardId" th:value="${boardId}">
+        <input type="hidden" name="attachmentId" id="deleteAttachmentId">
     </form>
 
 </main>

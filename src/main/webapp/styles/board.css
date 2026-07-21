@@ -218,16 +218,77 @@
 }
 
 /* ── Pièce jointe ────────────────────────────── */
+.attachment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
 .attachment-chip {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     padding: 6px 12px;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     font-size: 13px;
     color: var(--text-secondary);
     background: var(--bg-secondary);
+}
+
+.attachment-chip a {
+    color: var(--text-primary);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.attachment-chip a:hover {
+    text-decoration: underline;
+}
+
+.attachment-taille {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.attachment-remove {
+    margin-left: auto;
+    border: none;
+    background: none;
+    color: var(--text-tertiary);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    transition: color 0.15s;
+}
+
+.attachment-remove:hover {
+    color: var(--danger);
+}
+
+.attachment-upload {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.attachment-file-input {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.attachment-upload-btn {
+    width: auto;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+    white-space: nowrap;
 }
 
 /* ── Modale (détail / ajout d'une tâche) ─────── */

@@ -251,6 +251,19 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // ── Suppression d'une pièce jointe ────────────
+    var deleteAttachmentForm = document.getElementById('deleteAttachmentForm');
+    var deleteAttachmentId = document.getElementById('deleteAttachmentId');
+    document.querySelectorAll('[data-delete-attachment]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (!window.confirm('Supprimer cette pièce jointe ?')) {
+                return;
+            }
+            deleteAttachmentId.value = btn.getAttribute('data-attachment-id');
+            deleteAttachmentForm.submit();
+        });
+    });
+
     // Fermeture : bouton ✕, clic sur le fond, touche Échap
     document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
         overlay.addEventListener('click', function (e) {

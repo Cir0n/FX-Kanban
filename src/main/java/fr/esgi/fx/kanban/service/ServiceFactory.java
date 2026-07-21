@@ -25,6 +25,7 @@ public final class ServiceFactory {
     private static final ICommentaireRepository COMMENTAIRE_REPO = new CommentaireRepositoryImpl();
     private static final ITypeDeTacheRepository TYPE_REPO = new TypeDeTacheRepositoryImpl();
     private static final IActionRepository ACTION_REPO = new ActionRepositoryImpl();
+    private static final IPieceJointeRepository PIECE_JOINTE_REPO = new PieceJointeRepositoryImpl();
 
     // --- Services (singletons paresseux) ---
     private static final class Holder {
@@ -36,6 +37,7 @@ public final class ServiceFactory {
         static final ICommentaireService COMMENTAIRE = new CommentaireServiceImpl(COMMENTAIRE_REPO);
         static final ITypeDeTacheService TYPE = new TypeDeTacheServiceImpl(TYPE_REPO);
         static final IActionService ACTION = new ActionServiceImpl(ACTION_REPO);
+        static final IPieceJointeService PIECE_JOINTE = new PieceJointeServiceImpl(PIECE_JOINTE_REPO, ACTION_REPO);
     }
 
     public static IUtilisateurService utilisateurService() {
@@ -68,5 +70,9 @@ public final class ServiceFactory {
 
     public static IEmailService emailService() {
         return Holder.EMAIL;
+    }
+
+    public static IPieceJointeService pieceJointeService() {
+        return Holder.PIECE_JOINTE;
     }
 }

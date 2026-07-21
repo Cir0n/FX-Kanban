@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class PieceJointeRepositoryImpl implements IPieceJointeRepository {
 
@@ -56,6 +57,24 @@ public class PieceJointeRepositoryImpl implements IPieceJointeRepository {
             throw new RuntimeException("Erreur lors de la récupération des pièces jointes", e);
         }
         return pieces;
+    }
+
+    @Override
+    public Optional<PieceJointe> findById(Long id) {
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(Requetes.FIND_PIECE_JOINTE_BY_ID)) {
+
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la récupération de la pièce jointe id={}", id, e);
+            throw new RuntimeException("Erreur lors de la récupération de la pièce jointe", e);
+        }
+        return Optional.empty();
     }
 
     @Override

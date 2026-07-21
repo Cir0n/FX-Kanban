@@ -87,6 +87,8 @@ public final class Requetes {
             "INSERT INTO piece_jointe (nom_fichier, mime_type, contenu, tache_id) VALUES (?, ?, ?, ?)";
     public static final String FIND_PIECES_JOINTES_BY_TACHE =
             "SELECT id, nom_fichier, mime_type, contenu, created_at, tache_id FROM piece_jointe WHERE tache_id = ?";
+    public static final String FIND_PIECE_JOINTE_BY_ID =
+            "SELECT id, nom_fichier, mime_type, contenu, created_at, tache_id FROM piece_jointe WHERE id = ?";
     public static final String DELETE_PIECE_JOINTE =
             "DELETE FROM piece_jointe WHERE id = ?";
 

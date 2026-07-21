@@ -87,4 +87,15 @@ public final class VueSupport {
     public static String formatDate(LocalDateTime date) {
         return date == null ? "" : date.format(DATE_FMT);
     }
+
+    /** Taille de fichier formatée pour l'affichage (ex. "128 Ko", "1,4 Mo"). */
+    public static String formatTaille(long octets) {
+        if (octets < 1024) {
+            return octets + " o";
+        }
+        if (octets < 1024 * 1024) {
+            return String.format(Locale.FRENCH, "%.0f Ko", octets / 1024.0);
+        }
+        return String.format(Locale.FRENCH, "%.1f Mo", octets / (1024.0 * 1024));
+    }
 }
