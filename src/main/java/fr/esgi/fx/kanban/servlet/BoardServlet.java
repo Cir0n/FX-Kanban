@@ -203,6 +203,7 @@ public class BoardServlet extends HttpServlet {
         }
         return MembreVue.builder()
                 .id(utilisateur.getId())
+                .nom(utilisateur.getPseudo())
                 .initiales(VueSupport.initiales(utilisateur.getPseudo()))
                 .couleur(VueSupport.couleurAvatar(utilisateur.getPseudo()))
                 .build();

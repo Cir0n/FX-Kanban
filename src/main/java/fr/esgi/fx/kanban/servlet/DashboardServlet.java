@@ -96,6 +96,7 @@ public class DashboardServlet extends HttpServlet {
         List<MembreVue> membres = new ArrayList<>();
         for (Utilisateur contributeur : tableauService.findContributeurs(tableauId)) {
             membres.add(MembreVue.builder()
+                    .nom(contributeur.getPseudo())
                     .initiales(VueSupport.initiales(contributeur.getPseudo()))
                     .couleur(VueSupport.couleurAvatar(contributeur.getPseudo()))
                     .build());

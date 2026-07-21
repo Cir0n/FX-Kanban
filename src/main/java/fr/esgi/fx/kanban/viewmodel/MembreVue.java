@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 public class MembreVue {
     private Long id;
+    private String nom;
     private String initiales;
-    private String couleur; // couleur de fond de l'avatar (hex)
+    private String couleur;
 }

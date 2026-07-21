@@ -266,7 +266,7 @@
                                             <option th:each="m : ${membres}"
                                                     th:value="${m.id}"
                                                     th:selected="${tache.assigneeId != null and tache.assigneeId == m.id}"
-                                                    th:text="${m.initiales}">JD</option>
+                                                    th:text="${m.nom}">Jean Dupont</option>
                                         </select>
                                     </div>
                                 </div>
@@ -349,7 +349,7 @@
                                 <option value="">Personne</option>
                                 <option th:each="m : ${membres}"
                                         th:value="${m.id}"
-                                        th:text="${m.initiales}">JD</option>
+                                        th:text="${m.nom}">Jean Dupont</option>
                             </select>
                         </div>
                     </div>
