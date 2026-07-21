@@ -78,6 +78,20 @@ public class TableauRepositoryImpl implements ITableauRepository {
     }
 
     @Override
+    public void update(Tableau tableau) {
+        try (Connection conn = ConnectionManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(Requetes.UPDATE_TABLEAU)) {
+
+            stmt.setString(1, tableau.getName());
+            stmt.setLong(2, tableau.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            LOGGER.error("Erreur lors de la mise à jour du tableau id={}", tableau.getId(), e);
+            throw new RuntimeException("Erreur lors de la mise à jour du tableau", e);
+        }
+    }
+
+    @Override
     public void delete(Long id) {
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(Requetes.DELETE_TABLEAU)) {

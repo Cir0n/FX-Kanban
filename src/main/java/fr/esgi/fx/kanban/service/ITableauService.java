@@ -11,5 +11,6 @@ public interface ITableauService {
     List<Tableau> findAllByContributeur(Long utilisateurId);
     List<Utilisateur> findContributeurs(Long tableauId);
     void inviterContributeur(Long tableauId, String nickname);
+    Tableau renommer(Long id, String name);
     void supprimer(Long id);
 }

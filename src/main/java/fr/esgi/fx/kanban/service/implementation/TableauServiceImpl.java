@@ -80,6 +80,23 @@ public class TableauServiceImpl implements ITableauService {
     }
 
     @Override
+    public Tableau renommer(Long id, String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Le nom du tableau ne peut pas être vide");
+        }
+        if (name.length() > 60) {
+            throw new IllegalArgumentException("Le nom ne doit pas dépasser 60 caractères");
+        }
+        Tableau tableau = tableauRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tableau introuvable"));
+
+        tableau.setName(name);
+        tableauRepository.update(tableau);
+        LOGGER.info("Tableau id={} renommé en '{}'", id, name);
+        return tableau;
+    }
+
+    @Override
     public void supprimer(Long id) {
         tableauRepository.delete(id);
         LOGGER.info("Tableau id={} supprimé", id);

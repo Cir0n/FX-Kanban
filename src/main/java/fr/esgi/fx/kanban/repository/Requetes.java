@@ -34,6 +34,8 @@ public final class Requetes {
             FROM tableau t
             JOIN utilisateur_tableau ut ON t.id = ut.tableau_id
             WHERE ut.utilisateur_id = ?""";
+    public static final String UPDATE_TABLEAU =
+            "UPDATE tableau SET name = ? WHERE id = ?";
     public static final String DELETE_TABLEAU =
             "DELETE FROM tableau WHERE id = ?";
     public static final String INSERT_CONTRIBUTEUR =

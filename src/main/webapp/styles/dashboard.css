@@ -5,6 +5,7 @@
 }
 
 .board-card {
+    position: relative;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -15,6 +16,43 @@
 
 .board-card:hover {
     border-color: var(--text-tertiary);
+}
+
+/* ── Menu d'actions (3 petits points) ────────── */
+.board-card-menu {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+}
+
+.board-card-menu-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.board-card-menu-btn:hover,
+.board-card-menu-btn:focus {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.board-card-menu .dropdown-item-danger {
+    color: var(--danger);
+}
+
+.board-card-menu .dropdown-item-danger:hover,
+.board-card-menu .dropdown-item-danger:focus {
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
 }
 
 .board-card-bar {

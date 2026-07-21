@@ -8,8 +8,10 @@
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
           crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link th:href="@{/styles/common.css}" rel="stylesheet">
-    <link th:href="@{/styles/dashboard.css}" rel="stylesheet">
+    <link th:href="@{/styles/common.css(v=${#dates.createNow().time})}" rel="stylesheet">
+    <!-- board.css fournit les styles de la modale partagée (task-modal, modal-overlay…) -->
+    <link th:href="@{/styles/board.css(v=${#dates.createNow().time})}" rel="stylesheet">
+    <link th:href="@{/styles/dashboard.css(v=${#dates.createNow().time})}" rel="stylesheet">
 </head>
 <body class="app-page">
 
@@ -40,6 +42,11 @@
         </div>
     </div>
 
+    <!-- Messages de confirmation / erreur -->
+    <div th:if="${updated}" class="alert-success">Le tableau a bien été modifié.</div>
+    <div th:if="${deleted}" class="alert-success">Le tableau a bien été supprimé.</div>
+    <div th:if="${error}" class="alert-error" th:text="${error}">Une erreur est survenue.</div>
+
     <div class="board-grid">
 
         <!-- Une carte par tableau -->
@@ -49,6 +56,32 @@
            style="text-decoration: none;">
 
             <div class="board-card-bar" th:style="'background: ' + ${tableau.couleur}"></div>
+
+            <div class="board-card-menu dropdown">
+                <button type="button" class="board-card-menu-btn" data-bs-toggle="dropdown" aria-expanded="false"
+                        aria-label="Actions sur le tableau">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <button type="button" class="dropdown-item" data-edit-board
+                                th:attr="data-board-id=${tableau.id}, data-board-name=${tableau.name}">
+                            Modifier
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item dropdown-item-danger" data-delete-board
+                                th:attr="data-board-id=${tableau.id}">
+                            Supprimer
+                        </button>
+                    </li>
+                </ul>
+            </div>
 
             <div class="board-card-name" th:text="${tableau.name}">Nom du tableau</div>
 
@@ -72,6 +105,45 @@
         </a>
 
     </div>
+
+    <!-- Modale : modifier un tableau (partagée, pré-remplie par carte via JS) -->
+    <div class="modal-overlay" id="modal-edit-board" hidden>
+        <div class="task-modal" role="dialog" aria-modal="true" aria-label="Modifier le tableau" style="max-width: 420px;">
+
+            <div class="task-modal-header">
+                <div>
+                    <h2 class="task-modal-title">Modifier le tableau</h2>
+                </div>
+                <button type="button" class="modal-close" data-modal-close aria-label="Fermer">&times;</button>
+            </div>
+
+            <div class="task-modal-body">
+                <form id="editBoardForm" th:action="@{/board/edit}" method="post" novalidate>
+
+                    <input type="hidden" name="boardId" id="editBoardId">
+
+                    <div class="mb-3">
+                        <label for="editBoardName" class="form-label">Nom du tableau</label>
+                        <input type="text" class="form-control" id="editBoardName" name="name"
+                               maxlength="60" required style="width: 100%;">
+                        <div class="invalid-feedback">Le nom du tableau est requis.</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-outline-kanban" data-modal-close>Annuler</button>
+                        <button type="submit" class="btn-primary-kanban"
+                                style="width: auto; padding: 0 28px;">Enregistrer</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de suppression de tableau partagé, rempli via JS avant soumission -->
+    <form id="deleteBoardForm" th:action="@{/board/delete}" method="post" style="display:none;">
+        <input type="hidden" name="boardId" id="deleteBoardId">
+    </form>
 
 </main>
 
