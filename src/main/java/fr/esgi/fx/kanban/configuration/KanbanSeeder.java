@@ -16,6 +16,7 @@ import fr.esgi.fx.kanban.repository.implementation.UtilisateurRepositoryImpl;
 import fr.esgi.fx.kanban.service.ITableauService;
 import fr.esgi.fx.kanban.service.ITacheService;
 import fr.esgi.fx.kanban.service.IUtilisateurService;
+import fr.esgi.fx.kanban.service.implementation.EmailServiceImpl;
 import fr.esgi.fx.kanban.service.implementation.TableauServiceImpl;
 import fr.esgi.fx.kanban.service.implementation.TacheServiceImpl;
 import fr.esgi.fx.kanban.service.implementation.UtilisateurServiceImpl;
@@ -50,7 +51,7 @@ public final class KanbanSeeder {
     private final ITableauService tableauService = new
             TableauServiceImpl(tableauRepository, utilisateurRepository);
     private final ITacheService tacheService = new
-            TacheServiceImpl(tacheRepository, actionRepository);
+            TacheServiceImpl(tacheRepository, actionRepository, utilisateurRepository, new EmailServiceImpl());
 
     public void seed() {
         if (!utilisateurRepository.findAll().isEmpty()) {
@@ -99,10 +100,10 @@ public final class KanbanSeeder {
             for (int i = 0; i < NB_TACHES_PAR_COLONNE; i++) {
                 Utilisateur createur =
                         utilisateurs.get(faker.random().nextInt(utilisateurs.size()));
-                long typeId =
+                Long typeId =
                         TYPE_TACHE_IDS[faker.random().nextInt(TYPE_TACHE_IDS.length)];
                 tacheService.creer(faker.programmingLanguage().name(),
-                        faker.lorem().sentence(), colonne.getId(), typeId, createur.getId());
+                        faker.lorem().sentence(), colonne.getId(), typeId, null, createur.getId());
             }
         }
     }
