@@ -41,7 +41,7 @@ public class TaskNewServlet extends HttpServlet {
         String type = request.getParameter("type");
         String assigneeRaw = request.getParameter("assignee");
 
-        // Le nom et la colonne cible sont requis (la validation client de kanban.js
+        // Le nom et la colonne cible sont requis (la validation client de board.js
         // empêche déjà l'envoi d'un nom vide).
         if (name == null || name.trim().isEmpty() || colonneId == 0L) {
             LOGGER.warn("Création de tâche refusée pour le tableau id={} : nom ou colonne manquant", boardId);

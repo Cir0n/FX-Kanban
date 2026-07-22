@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * Déplace une tâche vers une autre colonne (drag & drop du board).
  * <p>
- * Endpoint appelé en fetch/AJAX par kanban.js : il ne renvoie pas de page,
+ * Endpoint appelé en fetch/AJAX par board.js : il ne renvoie pas de page,
  * seulement un code HTTP (204 = succès, 4xx = erreur). Le déplacement dans
  * l'affichage est fait côté client de façon optimiste.
  */

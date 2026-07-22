@@ -117,7 +117,7 @@ public class BoardNewServlet extends HttpServlet {
             couleur = COULEURS.getFirst();
         }
 
-        // Validation (alignée avec la validation client de kanban.js)
+        // Validation (alignée avec la validation client de board-new.js)
         String nameError = validerNom(trimmedName);
         if (nameError != null) {
             afficherFormulaireErreur(request, response, name, couleur, nameError, null);

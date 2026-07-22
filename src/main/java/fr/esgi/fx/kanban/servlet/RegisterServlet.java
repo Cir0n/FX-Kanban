@@ -54,7 +54,7 @@ public class RegisterServlet extends HttpServlet {
         WebContext context = newContext(request, response);
         boolean hasError = false;
 
-        // Validation (alignée avec la validation client de kanban.js)
+        // Validation (alignée avec la validation client de register.js)
         if (pseudo == null || pseudo.trim().isEmpty()) {
             context.setVariable("pseudoError", "Le pseudo est requis.");
             hasError = true;
