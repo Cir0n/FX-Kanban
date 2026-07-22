@@ -1,119 +1,101 @@
 # SOUTENANCE — Cheat Sheet FX-Kanban
 
-> Objectif de ce document : pouvoir répondre à une question du jury sans réciter.
-> Chaque section explique un concept **en langage simple**, montre **où il vit dans
-> le code** (fichier/classe précis), et dit pourquoi ce choix a été fait. Les mots
-> techniques sont expliqués la première fois qu'ils apparaissent. À lire, pas à
-> apprendre par cœur.
+> Objectif : pouvoir répondre à une question du jury sans réciter. Chaque section
+> explique un choix technique, cite le fichier/la classe concernée, et dit pourquoi
+> ce choix a été fait. On suppose les bases connues (HTTP, SQL, sessions, MVC...) ;
+> on détaille surtout ce qui est spécifique à ce projet.
 
 ---
 
 ## 1. Vue d'ensemble de l'architecture
 
-### Le principe : pas de framework, tout est écrit à la main
+### Le principe : pas de framework, couches écrites à la main
 
-Un **framework** (comme Spring) est une boîte à outils toute faite qui fait
-automatiquement plein de choses à notre place (router les requêtes, créer les
-objets, etc.). Ici, **on n'utilise pas Spring** : chaque brique est écrite
-explicitement. C'est plus long à écrire, mais ça permet de comprendre ce qui se
-passe vraiment "sous le capot".
-
-L'application est découpée en 3 couches qui se passent le relais, comme une chaîne :
+Pas de Spring. Chaque couche (routing, IoC, accès données) est réimplémentée
+explicitement pour comprendre ce qu'un framework comme Spring MVC automatise
+d'habitude.
 
 ```
-                         Navigateur (page HTML + kanban.js)
+                         Navigateur (HTML + kanban.js)
                                     │
-                                    │ Requête HTTP (le navigateur demande une page
-                                    │ ou envoie un formulaire)
+                                    │ HTTP (formulaires ou fetch())
                                     ▼
 ┌───────────────────────────────────────────────────────────┐
-│  SERVLET (fr.esgi.fx.kanban.servlet)                       │  = le "réceptionniste"
-│  BoardServlet, TaskEditServlet, LoginServlet, ...           │
-│  - lit ce que le navigateur a envoyé (paramètres, session)  │
-│  - demande au Service de faire le travail                   │
-│  - renvoie une page (via Thymeleaf) ou redirige ailleurs     │
+│  SERVLET (fr.esgi.fx.kanban.servlet)                       │  = Controller
+│  BoardServlet, TaskEditServlet, LoginServlet, ...            │
+│  - lit requête (params, session)                             │
+│  - appelle un service                                        │
+│  - rend une vue Thymeleaf ou redirige (302)                   │
 └───────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌───────────────────────────────────────────────────────────┐
-│  SERVICE (fr.esgi.fx.kanban.service[.implementation])       │  = les règles métier
-│  ITacheService / TacheServiceImpl, ...                      │
-│  - vérifie que les règles sont respectées (nom pas vide...)  │
-│  - fait travailler plusieurs Repository ensemble si besoin    │
+│  SERVICE (fr.esgi.fx.kanban.service[.implementation])       │  = logique métier
+│  ITacheService / TacheServiceImpl, ...                       │
+│  - validation métier, orchestration de plusieurs repositories│
 └───────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌───────────────────────────────────────────────────────────┐
-│  REPOSITORY (fr.esgi.fx.kanban.repository[.implementation]) │  = l'accès aux données
+│  REPOSITORY (fr.esgi.fx.kanban.repository[.implementation]) │  = accès données
 │  ITacheRepository / TacheRepositoryImpl, ConnectionManager   │
-│  - écrit/lit dans la base de données en SQL                  │
+│  - JDBC brut, PreparedStatement, SQL centralisé (Requetes.java)│
 └───────────────────────────────────────────────────────────┘
                                     │
                                     ▼
                           Base H2 (fichier kanban_db.mv.db)
 ```
 
-Chaque couche ne parle qu'à la couche juste en dessous : une Servlet n'écrit jamais
-de SQL elle-même, elle demande toujours à un Service.
+Chaque couche ne parle qu'à celle du dessous (une Servlet n'écrit jamais de SQL
+directement). Au démarrage, 3 `@WebListener` initialisent l'infra avant la première
+requête : Thymeleaf, la base H2, Stripe (détails sections 2/3/5).
 
-Avant même qu'une seule requête n'arrive, 3 morceaux de code s'exécutent une seule
-fois **au démarrage de l'application** pour tout préparer : le moteur de pages
-(Thymeleaf), la base de données (H2) et le paiement (Stripe). Détails sections 2/3/5.
+### Organisation des packages
 
-### Organisation des dossiers (packages)
-
-| Dossier | Rôle en une phrase | Exemples |
+| Package | Rôle | Exemples |
 |---|---|---|
-| `configuration/` | Code qui s'exécute **une seule fois, au démarrage** | `ThymeleafConfiguration`, `DatabaseConfiguration`, `StripeConfiguration` |
-| `model/` | Les "fiches" qui représentent les données telles qu'elles sont en base | `Utilisateur`, `Tableau`, `Colonne`, `Tache`, `Commentaire`, `PieceJointe`, `Action`, `TypeDeTache` |
-| `repository/` + `.implementation/` | Le code qui va lire/écrire dans la base de données | `ITacheRepository` / `TacheRepositoryImpl`, `ConnectionManager`, `Requetes.java` |
-| `service/` + `.implementation/` | Les règles métier (ce qui est permis ou non) | `ITacheService` / `TacheServiceImpl`, `ServiceFactory` |
-| `servlet/` | Les points d'entrée : une classe par page ou par action possible | `BoardServlet`, `TaskEditServlet`, `LoginServlet` |
-| `viewmodel/` | Des "fiches" préparées **spécialement pour l'affichage** | `TacheVue`, `ColonneVue`, `CommentaireVue`, `ActionVue`, `PieceJointeVue`, `VueSupport` (petites fonctions de mise en forme) |
+| `configuration/` | Code exécuté une seule fois au démarrage (listeners) | `ThymeleafConfiguration`, `DatabaseConfiguration`, `StripeConfiguration` |
+| `model/` | Entités métier, POJO Lombok, ~1:1 avec les tables | `Utilisateur`, `Tableau`, `Colonne`, `Tache`, `Commentaire`, `PieceJointe`, `Action`, `TypeDeTache` |
+| `repository/` + `.implementation/` | Interfaces + JDBC brut | `ITacheRepository` / `TacheRepositoryImpl`, `ConnectionManager`, `Requetes.java` |
+| `service/` + `.implementation/` | Logique métier | `ITacheService` / `TacheServiceImpl`, `ServiceFactory` |
+| `servlet/` | Un servlet par route/fonctionnalité | `BoardServlet`, `TaskEditServlet`, `LoginServlet` |
+| `viewmodel/` | DTOs d'affichage, distincts des entités `model/` | `TacheVue`, `ColonneVue`, `CommentaireVue`, `ActionVue`, `PieceJointeVue`, `VueSupport` |
 
-Pourquoi deux types de "fiches" (`model/` et `viewmodel/`) pour la même chose ? Une
-tâche en base a juste un `typeId` (un simple nombre, ex. `2`). Mais à l'écran, on
-veut afficher un badge "Bug" avec une couleur. `BoardServlet.mapTache()` fait cette
-traduction : Thymeleaf (le moteur qui affiche les pages) ne voit jamais les fiches
-brutes de la base, seulement des fiches déjà "habillées" pour l'affichage.
+Pourquoi séparer `model/` et `viewmodel/` ? Une `Tache` n'a en base qu'un `typeId`
+(Long) ; la vue a besoin d'un libellé ("Bug") et d'une couleur déjà résolus.
+`BoardServlet.mapTache()` fait cette conversion — Thymeleaf ne manipule jamais les
+entités brutes, seulement des `*Vue`._
 
-`ServiceFactory` construit une seule fois chaque Service et chaque Repository (un
-seul exemplaire partagé par toute l'application, jamais recréé à chaque requête —
-on appelle ça un **singleton**), et chaque Servlet vient s'y servir dans son
-`init()`. C'est notre version artisanale de ce qu'un framework comme Spring ferait
-automatiquement (on appelle ça l'**injection de dépendances** : fournir à chaque
-classe les objets dont elle a besoin, sans qu'elle ait à les fabriquer elle-même).
+`ServiceFactory` construit tous les repositories et services en singletons (pattern
+*lazy holder*), et chaque servlet va s'y servir dans son `init()`. C'est
+l'équivalent artisanal de l'`ApplicationContext` Spring — un service locator manuel
+en l'absence de conteneur IoC.
 
-### Technologies utilisées et pourquoi
+### Stack technique et pourquoi
 
-| Techno | À quoi ça sert | Pourquoi ce choix |
+| Techno | Rôle | Pourquoi ce choix |
 |---|---|---|
-| Jakarta Servlet API 6.1 | Recevoir et répondre aux requêtes HTTP | Contrainte pédagogique : comprendre comment marche une requête web sans qu'un framework le cache |
-| Thymeleaf 3.1.5 | Générer les pages HTML côté serveur | Pas besoin de gérer un projet front séparé (React, Vue...) |
-| H2 2.3 (fichier) | Base de données | Aucune installation, portable, démarre instantanément (détails section 5) |
-| Lombok | Génère automatiquement le code répétitif (getters, setters...) | Moins de lignes à écrire à la main sur les fiches `model/` |
-| Log4j2 | Écrit les logs (traces de ce qui se passe) dans la console et dans un fichier | Standard, gère la rotation des fichiers de logs |
-| Stripe (SDK `stripe-java`) | Gérer un paiement en ligne factice (mode test) | Rend payante la création d'un tableau, pour la démo |
-| Jakarta Mail (Eclipse Angus) | Envoyer des emails | Notifie un utilisateur qu'on lui a assigné une tâche |
-| Gson | Convertir des objets Java en JSON et inversement | Utilisé uniquement pour l'échange avec le JavaScript côté paiement |
-| dotenv-java | Charger le fichier `.env` en local | Pour ne jamais écrire un mot de passe/clé directement dans le code (sections 3/4) |
-| JUnit 5 + Mockito | Tests automatiques | Vérifie que le code fait ce qu'il doit, sans tout retester à la main |
-| Maven (paquet `.war`) | Compiler et empaqueter le projet | Le fichier produit se dépose tel quel dans Tomcat |
+| Jakarta Servlet API 6.1 | HTTP | Contrainte pédagogique : comprendre le cycle de requête sans framework |
+| Thymeleaf 3.1.5 | Rendu HTML côté serveur | Pas de front séparé à builder pour ce périmètre |
+| H2 2.3 (mode fichier) | Base de données | Zéro install, démarrage instantané (section 5) |
+| Lombok | Génère getters/setters/builder | Moins de boilerplate sur les modèles |
+| Log4j2 | Logs (console + fichier `logs/kanban.log`) | Standard, rotation gérée |
+| Stripe SDK (`stripe-java`) | Paiement mode test | Rend payante la création d'un tableau, pour la démo |
+| Jakarta Mail (Eclipse Angus) | SMTP | Notifications d'assignation de tâche |
+| Gson | JSON | Utilisé seulement par `StripeServlet` (échange avec le JS) |
+| dotenv-java | Charge `.env` en local | Secrets hors du code (sections 3/4) |
+| JUnit 5 + Mockito | Tests | Unitaires (repo mocké) + intégration (H2 réel) |
+| Maven (packaging `war`) | Build | Déployable tel quel sur Tomcat |
 
 ---
 
 ## 2. Servlets et cycle de vie d'une requête HTTP
 
-### Comment une URL retrouve sa Servlet
+### Mapping URL → Servlet
 
-**Pas de fichier central qui liste les routes.** Le fichier `web.xml`
-(`src/main/webapp/WEB-INF/web.xml`) existe mais il est **vide**. À la place, chaque
-classe porte directement l'annotation `@WebServlet` qui déclare l'URL qu'elle gère.
-Au démarrage, Tomcat (le logiciel qui fait tourner l'application, appelé **serveur
-d'application** ou **conteneur de servlets**) parcourt toutes les classes, repère
-celles qui ont cette annotation, et construit sa propre table de correspondance.
-
-Quelques routes réelles du projet :
+Pas de routing centralisé : `web.xml` (`src/main/webapp/WEB-INF/web.xml`) existe
+mais est **vide**. Chaque classe porte `@WebServlet` avec les URLs qu'elle gère ;
+Tomcat scanne le classpath au démarrage et construit sa table de routes.
 
 | Route | Méthode | Servlet |
 |---|---|---|
@@ -122,71 +104,53 @@ Quelques routes réelles du projet :
 | `/dashboard` | GET | `DashboardServlet` |
 | `/board?id=` | GET | `BoardServlet` |
 | `/board/new` | GET / POST | `BoardNewServlet` |
-| `/board/edit` | POST | `BoardEditServlet` |
-| `/board/delete` | POST | `BoardDeleteServlet` |
+| `/board/edit`, `/board/delete` | POST | `BoardEditServlet`, `BoardDeleteServlet` |
 | `/task/new`, `/task/edit`, `/task/delete`, `/task/move` | POST | `TaskNewServlet`, `TaskEditServlet`, `TaskDeleteServlet`, `TaskMoveServlet` |
 | `/task/attachment`, `/task/attachment/upload`, `/task/attachment/delete` | GET / POST | `TaskAttachmentDownloadServlet`, `TaskAttachmentUploadServlet`, `TaskAttachmentDeleteServlet` |
 | `/stripe/checkout` | GET / POST | `StripeServlet` |
 | `/logout` | GET | `LogoutServlet` |
 
-> Deux vieilles routes (`TableauServlet`, `TaskServlet`) ont été supprimées du
-> projet : c'étaient des débuts de servlets jamais terminés, qui essayaient
-> d'afficher une page qui n'existait plus. Elles n'étaient reliées à aucun lien
-> dans l'interface, donc invisibles pour un utilisateur normal — mais un jury qui
-> explore le code aurait pu tomber dessus et se poser des questions. Elles ont été
-> retirées proprement.
+> `TableauServlet` (`/tableau/{tableauId}`) et `TaskServlet` (`/task`) ont été
+> supprimés : scaffolds jamais terminés, ils rendaient un template `"hello"`
+> supprimé du projet (donc cassés), et n'étaient liés nulle part dans l'UI.
+> `TableauServlet` était le seul endroit du projet à utiliser les *URI templates*
+> du Servlet 6.0 (`{tableauId}`) — depuis sa suppression, tout passe par des query
+> params (`?id=...`).
 
-### Le cycle de vie d'une Servlet
-
-Une Servlet n'est **pas recréée à chaque visite** : Tomcat en garde une seule
-instance en mémoire, réutilisée pour tous les utilisateurs.
+### Cycle de vie
 
 ```
-Démarrage de Tomcat
+Démarrage Tomcat
       │
       ▼
-  init()            ← s'exécute UNE SEULE FOIS, avant la première requête
+  init()            ← une seule fois, avant la première requête
       │
       ▼
-[le serveur tourne, les requêtes arrivent]
+[requêtes entrantes]
       │
       ▼
-  service(req, res) ← s'exécute À CHAQUE requête (méthode héritée d'HttpServlet)
-   ├── doGet()       si la requête est un GET (consulter une page)
-   ├── doPost()      si la requête est un POST (envoyer/modifier des données)
+  service(req, res) ← à chaque requête (méthode héritée d'HttpServlet)
+   ├── doGet()
+   ├── doPost()
    └── ...
       │
       ▼
-  destroy()          ← s'exécute UNE SEULE FOIS, quand le serveur s'arrête
+  destroy()          ← une seule fois, à l'arrêt
 ```
 
-`init()` sert à récupérer une bonne fois pour toutes les objets dont la Servlet aura
-besoin (le moteur Thymeleaf, les Services) plutôt que de les redemander à chaque
-requête — un peu comme un cuisinier qui installe sa cuisine une fois le matin,
-plutôt que de tout ressortir à chaque commande.
+Une seule instance de chaque Servlet est réutilisée pour toutes les requêtes (pas
+d'instanciation par requête) — `init()` sert donc à récupérer une fois pour toutes
+les dépendances (`TemplateEngine`, services via `ServiceFactory`).
 
-### GET ou POST : comment on choisit dans ce projet
+### GET / POST et gestion de session
 
-- **GET** : on veut juste *voir* quelque chose, sans rien changer sur le serveur
-  (afficher le tableau, la page de connexion...).
-- **POST** : on *envoie* des données qui vont créer, modifier ou supprimer quelque
-  chose (créer une tâche, se connecter, uploader un fichier...).
-- **Exception** : `/task/move` (déplacer une tâche par glisser-déposer) est appelé
-  en POST mais via `fetch()` en JavaScript (`kanban.js`), sans recharger toute la
-  page — la carte bouge tout de suite à l'écran, et si le serveur répond une erreur,
-  elle revient à sa place.
+- **GET** : affichage, sans effet de bord.
+- **POST** : toute mutation (créer/modifier/supprimer/upload).
+- Exception AJAX : `/task/move` est appelé en `fetch()` POST depuis `kanban.js`
+  pour le drag & drop, sans recharger la page (mise à jour optimiste côté client,
+  rollback si le serveur renvoie une erreur).
 
-### Session et cookies : comment le serveur se souvient de vous
-
-Le HTTP est **"sans mémoire"** : par défaut, chaque requête est traitée comme si
-c'était la première fois, le serveur ne sait pas qui vous êtes d'une page à
-l'autre. Pour résoudre ça, on utilise une **session** : à la connexion, le serveur
-crée un petit espace mémoire qui vous est propre, et donne à votre navigateur un
-**cookie** (une petite information stockée par le navigateur, ici nommé
-`JSESSIONID`, géré automatiquement par Tomcat) qui sert de "badge" pour vous
-reconnaître aux requêtes suivantes.
-
-Après une connexion réussie (`LoginServlet.doPost`) :
+`HttpSession` classique, pas de JWT. À la connexion (`LoginServlet.doPost`) :
 
 ```java
 HttpSession session = request.getSession(true);
@@ -194,7 +158,7 @@ session.setAttribute("user", utilisateur.getPseudo());
 session.setAttribute("userId", utilisateur.getId());
 ```
 
-Chaque page qui nécessite d'être connecté commence par le même contrôle :
+Chaque servlet protégée répète le même garde-fou :
 
 ```java
 HttpSession session = request.getSession(false);
@@ -204,12 +168,11 @@ if (session == null || session.getAttribute("userId") == null) {
 }
 ```
 
-`LogoutServlet` efface tout avec `session.invalidate()`.
+`LogoutServlet` fait `session.invalidate()`. **Limite connue** : ce contrôle
+vérifie juste "connecté ou non", jamais "droit sur CE tableau/CETTE tâche" — pas de
+vérification d'appartenance (section 7/8).
 
-**Limite connue** : ce contrôle vérifie juste "êtes-vous connecté", jamais "avez-vous
-le droit sur CE tableau ou CETTE tâche précisément". Voir sections 7/8.
-
-### Exemple concret, ligne par ligne : `TaskEditServlet`
+### Exemple ligne par ligne : `TaskEditServlet`
 
 ```java
 @WebServlet(name = "taskEditServlet", value = {"/task/edit"})   // (1)
@@ -251,164 +214,130 @@ public class TaskEditServlet extends HttpServlet {
 }
 ```
 
-1. Déclare que cette classe répond à `/task/edit`, seulement en POST (il n'y a pas
-   de `doGet` — donc si on visite cette URL avec un navigateur normal, on obtient
-   une erreur "méthode non autorisée").
-2. Récupère le Service une seule fois, dans le tiroir partagé (`ServiceFactory`).
-3. Garde-fou de session : pas connecté → on renvoie vers `/login`, on arrête tout.
-4. Lecture des champs envoyés par le formulaire. Tout arrive sous forme de texte
-   brut (`String`) côté Servlet — contrairement à un framework, il n'y a pas de
-   conversion automatique en nombre ou en objet, il faut la faire soi-même.
-5. Une vérification "de surface" (le champ n'est pas vide) est faite **ici, tout de
-   suite** — ça évite de déranger la base de données pour rien si l'information de
-   base manque déjà.
-6. Le vrai travail (vérifier les règles, écrire en base, garder une trace dans
-   l'historique) est délégué au Service — la Servlet ne touche jamais directement
-   à la base de données.
-7. Une fois l'action réussie, on ne renvoie pas de page directement : on redirige
-   le navigateur (code HTTP 302) vers une autre URL, qui elle fera un GET. Ce
-   schéma s'appelle **Post/Redirect/Get** : il évite qu'un rafraîchissement (F5)
-   ne renvoie le même formulaire une deuxième fois par erreur.
-8. Si le Service refuse (ex. nom déjà pris), l'erreur est récupérée ici et
-   transformée en message lisible, transporté dans l'URL de redirection
-   (`&error=...`, mis sous une forme sûre pour une URL via `URLEncoder`).
+1. Route `/task/edit`, seulement en POST (pas de `doGet` surchargé → 405 sinon).
+2. Service récupéré une fois via le service locator maison.
+3. Garde de session classique.
+4. Params lus en `String` bruts — pas de binding automatique façon
+   `@RequestParam`, tout est parsé à la main.
+5. Validation de surface (champ vide) faite ici, avant d'aller en base.
+6. La vraie logique (règles, écriture, historique) est déléguée au service — la
+   servlet ne touche jamais un repository directement.
+7. Pattern **Post/Redirect/Get** : après un POST réussi, on redirige (302) plutôt
+   que de renvoyer du HTML, pour éviter une double soumission au F5.
+8. Erreurs métier (`IllegalArgumentException` du service) rattrapées ici,
+   transportées en query param encodé (`&error=...` via `URLEncoder`).
 
-### Le trajet complet d'une requête (exemple : modifier une tâche)
+### Trajet complet d'une requête (éditer une tâche)
 
 ```
-Navigateur : l'utilisateur clique sur "Enregistrer" dans le formulaire
+Navigateur : soumission du <form th:action="@{/task/edit}" method="post">
       │
       ▼
-Tomcat route la requête vers TaskEditServlet.doPost
+Tomcat route vers TaskEditServlet.doPost
       │
       ▼
-TaskEditServlet : vérifie que l'utilisateur est connecté, lit les champs du formulaire
+TaskEditServlet : vérifie la session, lit les paramètres
       │
       ▼
-ITacheService.modifier(...)  →  ITacheRepository.update(...) (requête SQL UPDATE)
-                              →  IActionRepository.save(...) (garde une trace dans l'historique)
+ITacheService.modifier(...)  →  ITacheRepository.update(...) (UPDATE SQL)
+                              →  IActionRepository.save(...) (historique)
       │
       ▼
-TaskEditServlet : renvoie "va voir ailleurs" → /board?id=X&updated=1   (HTTP 302)
+TaskEditServlet : sendRedirect("/board?id=X&updated=1")   [HTTP 302]
       │
       ▼
-Navigateur : refait automatiquement une nouvelle requête GET /board?id=X&updated=1
+Navigateur : refait un GET /board?id=X&updated=1
       │
       ▼
-BoardServlet.doGet : reconstruit toute la page (colonnes, tâches, commentaires...)
+BoardServlet.doGet : reconstruit tout le viewmodel (colonnes, tâches, commentaires...)
       │
       ▼
-Thymeleaf transforme les données en HTML
-      │
-      ▼
-Navigateur : reçoit la page complète, le message "La tâche a bien été modifiée." s'affiche
+Thymeleaf : templateEngine.process("board", context, response.getWriter())
 ```
 
 ---
 
-## 3. Intégration Stripe (mode bac à sable / test)
+## 3. Intégration Stripe (mode sandbox/test)
 
-Stripe est un service externe qui gère les paiements par carte à notre place — on
-ne manipule jamais de vrai numéro de carte bancaire nous-mêmes, on redirige
-l'utilisateur vers une page hébergée par Stripe.
-
-### Le flux complet (créer un tableau payant)
+### Flux complet (création d'un tableau payant)
 
 ```
 BoardNewServlet.doPost("/board/new")
-   │ vérifie le nom, le garde de côté en session le temps du paiement
+   │ valide le nom, mémorise en session (pendingBoardName/pendingBoardCouleur)
    ▼
 IStripeService.createCheckoutSession(500, "eur", "Création du tableau « X »",
                                       successUrl, cancelUrl)
-   │ demande à Stripe de préparer une page de paiement
    ▼
-response.sendRedirect(checkout.getUrl())    → l'utilisateur atterrit sur la page Stripe
+response.sendRedirect(checkout.getUrl())     → Checkout hébergé par Stripe
    │
-   ▼ (l'utilisateur paie avec une carte de test)
+   ▼ (paiement avec une carte de test)
    │
-GET /board/new?status=success&session_id=...   → Stripe renvoie l'utilisateur chez nous
-   │
+GET /board/new?status=success&session_id=...
    ▼
-finaliserApresPaiement() : on redemande à Stripe "ce paiement est-il vraiment passé ?"
-   │ (stripeService.retrieveSession(sessionId), on vérifie le statut "paid")
+finaliserApresPaiement() : stripeService.retrieveSession(sessionId)
+   │ vérifie checkout.getPaymentStatus() == "paid"
    ▼
-Le tableau est enfin créé, avec 4 colonnes par défaut (À faire / En cours / En revue / Terminé)
-   │
+tableauService.creer(...) + 4 colonnes par défaut (À faire / En cours / En revue / Terminé)
    ▼
-redirection vers /board?id=X&created=1
+redirect /board?id=X&created=1
 ```
 
-Si l'utilisateur annule (`status=cancel`), on oublie simplement le tableau en
-attente et on réaffiche le formulaire.
+Annulation : `status=cancel` → `annulerPaiement()` oublie le tableau en attente.
 
-**Ce projet n'utilise pas de "webhook"** — un webhook, c'est une notification que
-Stripe pourrait envoyer directement à notre serveur pour confirmer un paiement, de
-façon fiable et indépendante du navigateur. Ici, la confirmation se fait seulement
-au retour de l'utilisateur sur notre page. Ça marche pour une démo, mais c'est
-fragile : si l'utilisateur paie puis ferme l'onglet avant d'être redirigé, Stripe a
-bien pris l'argent, mais notre application ne le saura jamais et ne créera pas le
-tableau.
+**Pas de webhook Stripe signé.** La confirmation se fait au retour de redirection
+(`retrieveSession`), pas via un event asynchrone. Fonctionne pour une démo, mais
+fragile : si l'utilisateur ferme l'onglet juste après le paiement, Stripe a bien
+encaissé mais le tableau n'est jamais créé côté appli.
 
-### Où sont les clés, et comment elles sont protégées
+### Où sont les clés, comment elles sont protégées
 
-Une **clé API**, c'est un mot de passe secret qui permet à notre application de
-"parler" à Stripe en son nom. Elle ne doit jamais apparaître en clair dans le code
-(sinon n'importe qui lisant le code source, y compris sur GitHub, pourrait
-l'utiliser).
+`StripeConfiguration` (`@WebListener`, exécuté une fois au démarrage) lit
+`STRIPE_API_KEY` via `dotenv-java` :
 
-- `StripeConfiguration` (s'exécute une fois au démarrage) lit `STRIPE_API_KEY`
-  depuis un fichier `.env` grâce à la librairie `dotenv-java` :
-  ```java
-  Dotenv dotenv = Dotenv.configure().ignoreIfMissing().ignoreIfMalformed().load();
-  String apiKey = dotenv.get("STRIPE_API_KEY");
-  if (apiKey == null) apiKey = System.getProperty("stripe.api.key"); // solution de secours au déploiement
-  ```
-- Le vrai fichier `.env` (`src/main/resources/.env`) est **volontairement exclu du
-  suivi Git** (présent dans `.gitignore`, ligne 52) — il n'est jamais envoyé sur
-  GitHub. À la place, un fichier `.env.example` (celui-là bien versionné) montre
-  la liste des clés attendues, mais avec des valeurs bidons
-  (`STRIPE_API_KEY=sk_test_replace_me`).
-- La clé n'est lue qu'une fois au démarrage, puis réutilisée — jamais reloguée en
-  clair dans les logs.
+```java
+Dotenv dotenv = Dotenv.configure().ignoreIfMissing().ignoreIfMalformed().load();
+String apiKey = dotenv.get("STRIPE_API_KEY");
+if (apiKey == null) apiKey = System.getProperty("stripe.api.key"); // fallback déploiement
+```
 
-### Bac à sable (sandbox) vs vraie mise en production
+Le fichier `.env` (`src/main/resources/.env`) est explicitement dans `.gitignore`
+(ligne 52) — jamais commité. `.env.example` est versionné à la place, avec des
+valeurs bidons. La clé est stockée une fois en attribut du `ServletContext`
+(`STRIPE_SERVICE_CONTEXT_KEY`), relue par `BoardNewServlet`/`StripeServlet`.
+
+### Sandbox vs production
 
 | | Mode actuel (test) | Production |
 |---|---|---|
-| Clé | Commence par `sk_test_...` | Commence par `sk_live_...` |
-| Cartes utilisables | Cartes factices fournies par Stripe (ex. `4242 4242 4242 4242`) | Vraies cartes bancaires |
-| Argent | Aucun mouvement réel | Vrai prélèvement |
-| Confirmation du paiement | On redemande "et alors ?" au retour du navigateur | À ajouter : un vrai webhook, avec une signature vérifiée, pour être fiable même si le navigateur se ferme |
-| Connexion | HTTP local accepté | HTTPS obligatoire |
+| Clé | `sk_test_...` | `sk_live_...` |
+| Cartes | Cartes de test Stripe (`4242 4242 4242 4242`) | Vraies cartes |
+| Confirmation | `retrieveSession()` au retour navigateur | Webhook signé (`Stripe-Signature` + secret), asynchrone et idempotent |
+| Transport | HTTP local accepté | HTTPS obligatoire |
 
 ---
 
 ## 4. Envoi d'e-mails via SMTP Gmail
 
-**SMTP**, c'est le protocole standard (la méthode convenue) pour qu'un serveur
-envoie un email. Ici, on passe par les serveurs SMTP de Gmail plutôt que par un
-service dédié à l'envoi d'emails.
+### Configuration
 
-### Configuration utilisée
-
-`EmailServiceImpl` (via la librairie Jakarta Mail) :
+`EmailServiceImpl` (Jakarta Mail, impl. Eclipse Angus) :
 
 ```java
 props.put("mail.smtp.auth", "true");
-props.put("mail.smtp.starttls.enable", "true");   // on chiffre la connexion, port 587
+props.put("mail.smtp.starttls.enable", "true");   // STARTTLS, pas SSL direct (465)
 props.put("mail.smtp.host", host);                // smtp.gmail.com
 props.put("mail.smtp.port", port);                // 587
 ```
 
-`STARTTLS` veut dire que la connexion avec le serveur Gmail est chiffrée : personne
-ne peut lire en clair les identifiants qui transitent sur le réseau (contrairement
-à une connexion non protégée).
+Auth via un `Authenticator` qui fournit `username`/`password` lus depuis `.env`
+(`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`).
 
-### Où sont gérés les identifiants
+### Identifiants et dégradation gracieuse
 
-Même principe que pour Stripe : le nom d'utilisateur et le mot de passe SMTP sont
-lus depuis `.env` (jamais écrits en dur dans le code). Si l'information manque, un
-simple booléen `configure` passe à `false` :
+Même mécanisme que Stripe : lus une fois via `dotenv-java`, jamais en dur. Si la
+config est absente, un booléen `configure` passe à `false` et
+`envoyerNotificationAssignation()` devient un no-op silencieux (juste un WARN au
+démarrage) :
 
 ```java
 if (!configure) {
@@ -417,200 +346,153 @@ if (!configure) {
 }
 ```
 
-Choix assumé : **l'envoi d'un email ne doit jamais faire planter le reste de
-l'application**. Si le SMTP n'est pas configuré, `envoyerNotificationAssignation()`
-ne fait simplement rien — assigner une tâche à quelqu'un fonctionne quand même,
-juste sans email de notification.
+Choix assumé : l'envoi d'email ne doit jamais faire échouer une opération métier —
+assigner une tâche fonctionne même sans SMTP configuré.
 
-### Exemple concret : notifier une assignation de tâche
+### Flux : notification d'assignation
 
-Dans `TacheServiceImpl.creer()` et `.modifier()`, si une tâche reçoit un nouvel
-assigné :
+Dans `TacheServiceImpl.creer()`/`.modifier()`, si un `assigneeId` est fourni
+(nouveau ou changé) :
 
 ```java
 if (assigneId != null) {
-    notifierAssignation(assigneId, name);   // → retrouve l'email de la personne, puis envoie
+    notifierAssignation(assigneId, name);
 }
 ```
 
-Le message envoyé est un texte simple (pas de mise en forme HTML), avec le sujet
-*"Vous avez été assigné à une tâche"*. Si l'envoi échoue, l'erreur est juste notée
-dans les logs — jamais montrée à l'utilisateur, cohérent avec le principe "un email
-raté ne doit jamais bloquer une action".
+Construit un `MimeMessage` texte brut (sujet fixe *"Vous avez été assigné à une
+tâche"*), `Transport.send(message)`. Les échecs (`MessagingException`) sont
+loggés, jamais remontés à l'utilisateur.
 
 ### Limites du SMTP Gmail
 
-- **Mot de passe d'application obligatoire** : ce n'est pas le vrai mot de passe du
-  compte Gmail, mais un mot de passe spécial généré par Google, utilisable
-  uniquement par une application tierce (obligatoire dès que la double
-  authentification est activée sur le compte, ce qui est presque toujours le cas
-  aujourd'hui).
-- **Quota limité** : environ 500 emails/jour pour un compte Gmail gratuit — pas
-  du tout adapté à un gros volume d'envois.
-- Pas de suivi (savoir si l'email a été ouvert, ou s'il a "rebondi").
-- Risque d'être classé comme spam si le volume ou le contenu déclenche les filtres
-  de Google.
-- Pour un vrai produit en production : passer par un service dédié à l'envoi
-  d'emails (SendGrid, Mailgun, Amazon SES), avec le domaine correctement configuré
-  pour être reconnu comme fiable.
+- Mot de passe d'application obligatoire (Gmail refuse l'auth simple dès la 2FA
+  activée, quasi systématique aujourd'hui).
+- Quota ~500 mails/jour en compte gratuit — pas fait pour du volume.
+- Pas de tracking (ouverture, bounce), pas de HTML.
+- Risque de classement spam selon volume/contenu.
+- En prod : service dédié (SendGrid, Mailgun, SES) avec SPF/DKIM configurés.
 
 ---
 
 ## 5. Base de données H2
 
-H2 est une base de données légère, entièrement écrite en Java, qui peut tourner
-sans rien installer sur la machine (contrairement à MySQL ou PostgreSQL qui
-demandent un vrai serveur séparé).
-
-### Fonctionnement : mode fichier
-
-`ConnectionManager` :
+### Mode fichier
 
 ```java
 private static final String URL = "jdbc:h2:file:./kanban_db;AUTO_SERVER=TRUE";
 ```
 
-H2 peut fonctionner en **mode mémoire** (tout est effacé quand on éteint
-l'application, comme écrire sur un tableau blanc) ou en **mode fichier** (les
-données sont écrites sur le disque, comme un carnet papier, et restent après un
-redémarrage). Ce projet utilise le **mode fichier** : un fichier `kanban_db.mv.db`
-est créé au premier lancement et conserve toutes les données. `AUTO_SERVER=TRUE`
-permet à plusieurs programmes (l'IDE et les tests, par exemple) de se connecter en
-même temps à ce fichier.
+Mode fichier (pas `jdbc:h2:mem:`) : `kanban_db.mv.db` créé au premier lancement,
+données persistées entre redémarrages. `AUTO_SERVER=TRUE` autorise plusieurs
+connexions concurrentes sur le même fichier (IDE + tests en parallèle). Pas de
+console H2 web activée — exploration via un client JDBC (déjà configuré dans
+`.idea/dataSources.xml`).
 
-Il n'y a pas de "console H2" (une page web pour explorer la base à la souris)
-activée dans ce projet — pour regarder ce qu'il y a dans la base, on ouvre
-directement le fichier avec un outil de base de données (déjà configuré dans
-`.idea/dataSources.xml` pour IntelliJ).
+Le driver H2 est enregistré explicitement dans un bloc `static {}` de
+`ConnectionManager` (`Class.forName("org.h2.Driver")`) : sous Tomcat, le
+classloader isolé de la webapp empêche l'auto-découverte habituelle du driver par
+`DriverManager` (classloader système).
 
-Petit détail technique bon à connaître : le pilote (**driver**) qui permet à Java de
-parler à H2 doit être chargé explicitement dans un bloc `static {}` de
-`ConnectionManager` (`Class.forName("org.h2.Driver")`). Sous Tomcat, le mécanisme
-habituel qui trouve automatiquement ce pilote ne fonctionne pas à cause de la façon
-dont Tomcat isole le code de chaque application — sans cette ligne, la connexion à
-la base échouerait au démarrage.
+### Initialisation / seed
 
-### Comment la base est créée et remplie
-
-`DatabaseConfiguration` (s'exécute une seule fois, au tout premier démarrage de
-l'application) exécute :
+`DatabaseConfiguration` (`@WebListener`) exécute une seule fois au démarrage :
 
 ```java
 stmt.execute("RUNSCRIPT FROM 'classpath:import.sql'");
 ```
 
-Le fichier `src/main/resources/import.sql` contient les commandes qui créent les 9
-tables (`utilisateur`, `type_tache`, `tableau`, `utilisateur_tableau`, `colonne`,
-`tache`, `piece_jointe`, `commentaire`, `action`) et qui ajoutent les 4 types de
-tâche de base (Standard/Bug/Spike/Amélioration). Ce script est écrit pour être
-**rejouable sans risque** (`CREATE TABLE IF NOT EXISTS`, `MERGE INTO`) : si on le
-lance deux fois, rien ne casse ni ne se duplique.
+`import.sql` : 9 `CREATE TABLE IF NOT EXISTS` + 4 `MERGE INTO type_tache` (seed
+idempotent des types Standard/Bug/Spike/Amélioration).
 
-> Détail utile si le jury demande "pourquoi une classe spéciale pour ça, pas juste
-> l'URL de connexion ?" : au départ, ce script se relançait à **chaque** connexion
-> ouverte à la base, ce qui ralentissait énormément l'application (il n'y a pas de
-> réserve de connexions déjà prêtes — voir plus bas). Il est maintenant joué une
-> seule fois, au tout début.
+> Avant : le script tournait via la clause `INIT=` de l'URL JDBC, donc à **chaque**
+> connexion. Sans pool de connexions (une connexion par appel repository), ça
+> ralentissait fortement l'appli. Désormais joué une seule fois, au démarrage.
 
-### Pourquoi H2 pour ce projet — et ses limites à assumer
+### Justification et limites
 
-**Avantages, pour un projet étudiant / une démo** :
-- Aucune installation à faire (pas de serveur MySQL/PostgreSQL à monter).
-- Démarrage instantané, le fichier de données se déplace avec le projet.
-- Largement suffisant pour peu de données et peu d'utilisateurs en même temps.
-- Utilise du SQL classique, donc peu de choses à changer si on migre plus tard.
+**Pour** : zéro install, portable, démarrage instantané, suffisant pour une démo
+avec peu d'utilisateurs simultanés, SQL standard donc peu de migration si besoin.
 
-**Limites, à assumer si le jury pousse** :
-- Pas de **pool de connexions** (une réserve de connexions déjà ouvertes, prêtes à
-  être réutilisées) : chaque appel à la base ouvre puis referme sa propre
-  connexion. Ça marche, mais ce n'est pas la manière la plus rapide de faire à
-  grande échelle.
-- Pas pensée pour beaucoup d'utilisateurs en même temps, ni pour de la haute
-  disponibilité (pas de copie de secours automatique).
-- Pas d'outil de suivi des changements de structure de la base (pas de
-  Flyway/Liquibase) — juste des commandes SQL rejouables à chaque démarrage.
-- Passer en production reviendrait à changer l'adresse de connexion et le pilote
-  dans `ConnectionManager` (pour PostgreSQL ou MySQL) et ajouter un vrai pool de
-  connexions — le reste du code ne change presque pas, car il n'y a pas d'ORM
-  propriétaire, juste du SQL standard.
+**Limites à assumer** :
+- Pas de pool de connexions (`try-with-resources` par appel repository) — correct
+  fonctionnellement, pas optimal en charge.
+- Pas pensée pour de la forte concurrence ni de la HA.
+- Pas de Flyway/Liquibase, juste des `CREATE TABLE IF NOT EXISTS` rejouables.
+- Migration prod = changer URL + driver dans `ConnectionManager` pour
+  PostgreSQL/MySQL + ajouter un vrai pool (HikariCP) ; le reste (SQL standard, pas
+  d'ORM propriétaire) bouge peu.
 
 ---
 
 ## 6. Thymeleaf
 
-### Son rôle
+### Rôle et intégration
 
-Thymeleaf génère des pages HTML **côté serveur** : la page complète est déjà
-construite avant même d'arriver au navigateur, contrairement à une application
-"tout en JavaScript" (React, Vue...) où le navigateur assemble la page lui-même.
-Les seuls moments où le JavaScript agit tout seul sans recharger la page sont
-ciblés, comme le glisser-déposer d'une tâche (`/task/move` appelé en `fetch()`
-depuis `kanban.js`).
+Rendu HTML côté serveur (SSR) — pas de SPA. Les interactions dynamiques ciblées
+(drag & drop) passent par du `fetch()` (`kanban.js`), pas par une réécriture front
+complète.
 
-Le moteur Thymeleaf est construit une seule fois au démarrage
-(`ThymeleafConfiguration`), rangé dans un tiroir partagé
-(`ServletContext.setAttribute("templateEngine", ...)`), puis chaque Servlet vient
-le récupérer dans son `init()` :
+`ThymeleafConfiguration` (`@WebListener`) construit le `TemplateEngine` une seule
+fois au démarrage :
 
 ```java
-templateEngine = (TemplateEngine) getServletContext().getAttribute("templateEngine");
+WebApplicationTemplateResolver templateResolver = new WebApplicationTemplateResolver(application);
+templateResolver.setTemplateMode(TemplateMode.HTML);
+templateResolver.setPrefix("/WEB-INF/templates/");
+templateResolver.setSuffix(".html");
+templateResolver.setCacheable(false);   // dev : templates rechargés sans redémarrer
+sce.getServletContext().setAttribute("templateEngine", templateEngine);
 ```
 
-### La syntaxe utilisée dans le projet
+Chaque servlet le récupère dans `init()` via `getServletContext().getAttribute(...)`
+— pattern service locator, faute de conteneur IoC.
 
-Thymeleaf ajoute des attributs spéciaux (préfixés `th:`) directement dans le HTML.
-Exemples réels tirés de `board.html` / `dashboard.html` :
+Toutes les servlets utilisent `WebContext` (via
+`JakartaServletWebApplication.buildApplication(...)`), requis dès qu'un template
+utilise `th:href="@{/...}"` (résolution avec context path) — c'est le cas de tous
+les templates actuels.
 
-| Attribut | Exemple réel | Ce que ça fait, en clair |
+### Syntaxe utilisée dans le projet
+
+Exemples réels tirés de `board.html`/`dashboard.html` :
+
+| Directive | Exemple réel | Effet |
 |---|---|---|
-| `th:text` | `<span th:text="${tache.name}">Nom de la tâche</span>` | Remplace le texte affiché par la vraie valeur |
-| `th:each` | `<div th:each="tache : ${colonne.taches}">` | Répète le bloc HTML une fois par élément de la liste (boucle) |
-| `th:if` | `<div th:if="${!#lists.isEmpty(tache.pieceJointes)}">` | N'affiche ce bloc que si la condition est vraie |
-| `th:attr` | `th:attr="data-modal-target='modal-' + ${tache.id}, ..."` | Pose plusieurs attributs HTML calculés en une seule fois |
-| `th:href="@{...}"` | `th:href="@{/board(id=${tableau.id})}"` | Construit un lien correct même si l'application n'est pas déployée à la racine du site |
-| `th:classappend` | `th:classappend="'badge-' + ${tache.typeClasse}"` | Ajoute une classe CSS calculée, sans effacer les classes déjà présentes |
-| `th:field` | *non utilisé* | Pas de remplissage automatique de formulaire : chaque champ `name=` est lu à la main côté Servlet |
-| `th:fragment` / `th:replace` | *non utilisé* | La barre de navigation est copiée-collée dans chaque page (`board.html`, `dashboard.html`, `login.html`...) plutôt que d'être écrite une seule fois et réutilisée. C'est une amélioration facile à faire (section 7). |
+| `th:text` | `<span th:text="${tache.name}">Nom de la tâche</span>` | Remplace le texte (échappé HTML) ; le texte statique sert d'aperçu design |
+| `th:each` | `<div th:each="tache : ${colonne.taches}">` | Boucle sur `List<TacheVue>` |
+| `th:if` | `<div th:if="${!#lists.isEmpty(tache.pieceJointes)}">` | Affichage conditionnel |
+| `th:attr` | `th:attr="data-modal-target='modal-' + ${tache.id}, data-task-id=${tache.id}"` | Pose plusieurs attributs dynamiques en une fois |
+| `th:href="@{...}"` | `th:href="@{/board(id=${tableau.id})}"` | URL avec query params, tenant compte du context path |
+| `th:classappend` | `th:classappend="'badge-' + ${tache.typeClasse}"` | Ajoute une classe CSS calculée sans écraser les classes statiques |
+| `th:field` | non utilisé | Pas de binding de formulaire automatique — les `name=` sont posés à la main et relus via `request.getParameter(...)` |
+| `th:fragment`/`th:replace` | non utilisé | La navbar est dupliquée dans chaque page (`board.html`, `dashboard.html`, `login.html`...) plutôt que factorisée. Piste d'amélioration évidente (section 7). |
 
-### Comment les données passent du code Java vers la page
-
-La Servlet prépare des "fiches d'affichage" (`viewmodel/`, jamais les fiches brutes
-de la base) et les range dans un contexte :
+### Du contrôleur vers la vue
 
 ```java
 context.setVariable("colonnes", colonnes(tableau.getId(), utilisateurs));
 ```
 
-Le template lit ensuite `${colonnes}`. Ça évite que la page HTML ait besoin de
-connaître les détails de la base de données (ex. le fait qu'un type de tâche est
-juste un numéro en base ; côté page, on ne voit que le libellé et la couleur déjà
-calculés).
+Le servlet passe des viewmodels, jamais les entités `model/` — la vue ne connaît
+pas la structure des tables SQL.
 
-### Protection automatique contre le XSS
+### Échappement / XSS
 
-**XSS** (*Cross-Site Scripting*), c'est le fait qu'un utilisateur malveillant écrive
-du code (par exemple `<script>...</script>`) dans un champ de formulaire, dans
-l'espoir que ce code s'exécute plus tard dans le navigateur d'un autre utilisateur
-qui verra cette donnée affichée. Par défaut, `th:text` **échappe** automatiquement
-le contenu (transforme les caractères spéciaux pour qu'ils s'affichent tels quels,
-au lieu d'être interprétés comme du code) — le projet n'utilise jamais `th:utext`
-(la version "non protégée"). Une description de tâche contenant du code JavaScript
-s'affiche donc comme du texte inoffensif, jamais exécuté.
+`th:text` échappe par défaut (jamais `th:utext` dans le projet) — une description
+de tâche contenant `<script>` s'affiche comme texte inerte.
 
 ---
 
 ## 7. Points transverses
 
-### Comment on accède aux données (sans ORM)
+### Accès aux données (pas d'ORM)
 
-Un **ORM** (comme Hibernate/JPA) est un outil qui transforme automatiquement des
-lignes de base de données en objets Java, et inversement. Ce projet **n'en utilise
-pas** : tout le SQL est écrit à la main, avec du JDBC "brut" (l'API standard de
-Java pour parler à une base de données). Chaque entité a une interface
-(`ITacheRepository`) et une implémentation (`TacheRepositoryImpl`) — c'est le
-**pattern Repository**, qui isole "comment on parle à la base" du reste du code.
-Toutes les requêtes SQL du projet sont regroupées dans **un seul fichier**,
-`Requetes.java`, sous forme de textes constants, classés par entité.
+Pas de JPA/Hibernate (malgré `hibernate-validator` en dépendance — jamais exploité,
+ni comme validateur ni comme ORM, ajouté tôt et jamais utilisé). JDBC brut,
+pattern Repository (interface + impl). Tout le SQL est centralisé dans
+`Requetes.java`, constantes texte groupées par entité. Chaque méthode ouvre sa
+propre connexion :
 
 ```java
 try (Connection conn = ConnectionManager.getConnection();
@@ -619,175 +501,129 @@ try (Connection conn = ConnectionManager.getConnection();
 }
 ```
 
-Un `PreparedStatement` (requête préparée), c'est une requête SQL écrite avec des
-"trous" (les `?`) qu'on remplit ensuite avec les vraies valeurs — voir juste en
-dessous pourquoi c'est important pour la sécurité.
-
 ### Sécurité
 
-- **Injection SQL** : impossible ici. Une injection SQL, c'est quand un
-  utilisateur écrit volontairement du code SQL dans un champ de formulaire pour
-  détourner la requête d'origine (par exemple pour se connecter sans mot de
-  passe). Comme le projet utilise uniquement des requêtes préparées
-  (`PreparedStatement`, jamais de texte SQL "collé" avec les valeurs de
-  l'utilisateur), ce que la personne tape est toujours traité comme une simple
-  donnée, jamais comme une commande.
-- **XSS** : voir section 6 — Thymeleaf protège par défaut.
-- **Mots de passe** : jamais stockés en clair. Ils sont transformés en une
-  "empreinte" (**hash**) impossible à retransformer en mot de passe d'origine,
-  avec l'algorithme **PBKDF2WithHmacSHA256** (`UtilisateurServiceImpl`). Un
-  **sel** (une valeur aléatoire différente à chaque compte) est ajouté avant le
-  calcul, pour que deux personnes avec le même mot de passe n'aient jamais la
-  même empreinte stockée — ça empêche aussi les attaques par "dictionnaire
-  précalculé". Ce n'est pas l'algorithme le plus moderne (bcrypt/argon2 sont
-  aujourd'hui recommandés en premier choix), mais c'est un algorithme standard et
-  reconnu, largement suffisant pour ce projet.
-- **Upload de fichiers** (pièces jointes) : le nom du fichier envoyé par
-  l'utilisateur est nettoyé avant d'être stocké
-  (`Paths.get(...).getFileName()` dans `TaskAttachmentUploadServlet`), pour
-  empêcher qu'un nom bizarre comme `../../evil.sh` ne pose problème.
-- **CSRF** (*Cross-Site Request Forgery*) : **pas de protection** dans ce projet.
-  C'est une attaque où un site malveillant fait discrètement envoyer une requête
-  par le navigateur d'un utilisateur déjà connecté chez nous (par exemple "supprimer
-  ce tableau"), sans qu'il l'ait vraiment voulu. Limite connue, à assumer si le
-  jury la soulève.
-- **Droits d'accès** : chaque page protégée vérifie juste "êtes-vous connecté",
-  jamais "êtes-vous bien membre de CE tableau précis". Ce n'est pas exploité dans
-  la démo (il faudrait deviner l'identifiant d'un tableau appartenant à quelqu'un
-  d'autre), mais la vérification n'existe pas. Limite connue et cohérente sur
-  tout le projet (même logique partout, pas d'oubli isolé).
+- **Injection SQL** : impossible en l'état, 100% `PreparedStatement`, aucune
+  concaténation de chaîne SQL dans le repo.
+- **XSS** : Thymeleaf échappe par défaut (section 6).
+- **Mots de passe** : hashés PBKDF2WithHmacSHA256 (65 536 itérations, sel
+  aléatoire 16 octets, `UtilisateurServiceImpl.hashPassword/verifierPassword`) —
+  pas bcrypt/argon2, mais un algo standard du JDK, suffisant à ce niveau.
+- **Upload de fichiers** : nom nettoyé via `Paths.get(...).getFileName()` avant
+  stockage (`TaskAttachmentUploadServlet`) pour éviter un `../../evil.sh`.
+- **CSRF** : aucune protection (pas de token sur les formulaires POST) — limite
+  connue à assumer si le jury la soulève.
+- **Autorisation** : vérifie juste "connecté", jamais "appartenance au tableau/à
+  la tâche". Pas exploité dans la démo, mais absent. Cohérent sur tout le projet
+  (même logique partout, pas un oubli isolé).
 
 ### Authentification
 
-Un seul système d'inscription/connexion : `RegisterServlet` (`/register`) +
-`LoginServlet` (`/login`), avec l'entité `Utilisateur` et un mot de passe haché
-(voir ci-dessus). Un tout premier prototype d'inscription, plus rudimentaire (mot
-de passe stocké en clair, données jamais sauvegardées en base), a été identifié
-puis nettoyé — il n'était relié à aucun lien dans l'interface.
+Un seul flux : `RegisterServlet`/`LoginServlet`, entité `Utilisateur`, mot de
+passe haché, stocké en base H2. Un premier prototype (`SigninServlet`/`User`/
+`UserRepository`, mot de passe en clair, stockage en mémoire) a été identifié puis
+supprimé — plus aucun lien dans l'UI.
 
 ### Organisation Maven
 
-Maven gère la compilation, les dépendances et l'empaquetage (`pom.xml`, produit un
-fichier `.war` — le format que Tomcat sait déployer). Java 25. Dépendances clés :
+`packaging=war`, Java 25. Dépendances clés :
 
-| Dépendance | Portée | Rôle |
+| Dépendance | Scope | Rôle |
 |---|---|---|
-| `jakarta.servlet-api` | `provided` (fournie par Tomcat, pas embarquée dans le `.war`) | Gérer le HTTP |
-| `thymeleaf` | compile | Moteur de templates |
+| `jakarta.servlet-api` | `provided` | Fournie par Tomcat, pas dans le WAR |
+| `thymeleaf` | compile | Templates |
 | `h2` | `runtime` | Base de données |
 | `stripe-java` | compile | Paiement |
-| `dotenv-java` | compile | Lire `.env` |
-| `jakarta.mail` (Eclipse Angus) | compile | Envoyer des emails |
-| `gson` | compile | JSON pour l'échange avec le paiement |
-| `log4j-api` / `log4j-core` | compile | Logs |
-| `lombok` | `provided` | Génère le code répétitif à la compilation |
-| `junit-jupiter`, `mockito-junit-jupiter` | `test` | Tests automatiques |
+| `dotenv-java` | compile | `.env` |
+| `jakarta.mail` (Eclipse Angus) | compile | SMTP |
+| `gson` | compile | JSON pour `/stripe/checkout` |
+| `log4j-api`/`log4j-core` | compile | Logs |
+| `lombok` | `provided` | Boilerplate à la compilation |
+| `junit-jupiter`, `mockito-junit-jupiter` | `test` | Tests |
 
-À noter : la dépendance `hibernate-validator` est présente dans `pom.xml` mais
-**n'est utilisée nulle part** dans le code — toute la validation est écrite à la
-main dans les Servlets/Services. C'est une dépendance ajoutée tôt dans le projet et
-jamais exploitée, pas un choix d'architecture.
+Plugins notables : `maven-war-plugin`, `maven-surefire-plugin` avec
+`-Dnet.bytebuddy.experimental=true` (nécessaire pour Mockito sous Java 25, que
+byte-buddy ne supporte pas encore officiellement).
 
 ### Déploiement
 
-Le fichier `.war` produit par `mvn clean package` se dépose dans Tomcat (en local,
-configuré dans l'IDE — voir `.idea/workspace.xml`, Tomcat 11). Comme `web.xml` est
-vide, ajouter une nouvelle page ne demande jamais de modifier un fichier de
-configuration : il suffit d'écrire une nouvelle classe avec `@WebServlet`.
+WAR déployé sur Tomcat (config IntelliJ locale, Tomcat 11 — voir
+`.idea/workspace.xml`). `web.xml` vide → ajouter une route = juste une nouvelle
+classe `@WebServlet`, aucune config à toucher. `mvn clean package` génère le
+`.war`.
 
 ### Pourquoi Servlets + Thymeleaf plutôt que Spring Boot
 
-Choix pédagogique assumé : comprendre ce qu'un framework comme Spring fait pour
-nous, en le refaisant à la main.
+Choix pédagogique assumé : reconstruire à la main ce que Spring automatise.
 
-| Ce que ferait Spring | Ce qu'on a écrit nous-mêmes à la place |
+| Spring | Équivalent fait main |
 |---|---|
-| `@Controller` / `@GetMapping` | `HttpServlet` + `@WebServlet` |
-| Conteneur qui fabrique et fournit les objets (IoC) | `ServiceFactory` (un tiroir de singletons fait main) |
-| Configuration exécutée au démarrage | `ServletContextListener` (`@WebListener`) |
-| Intégration automatique du moteur de vue | Câblage manuel de Thymeleaf (`WebContext`) |
+| `@Controller`/`@GetMapping` | `HttpServlet` + `@WebServlet` |
+| `ApplicationContext` (IoC) | `ServiceFactory` (singletons lazy holder) |
+| Bean lifecycle / config au démarrage | `ServletContextListener` (`@WebListener`) |
+| Intégration auto du moteur de vue | Câblage manuel de Thymeleaf (`WebContext`) |
 
-**Limites connues de cette approche "tout à la main"** :
-- Beaucoup de code se répète d'une Servlet à l'autre (lire un paramètre en nombre,
-  vérifier la session, rediriger avec un message d'erreur...) — pas de mécanisme
-  commun pour éviter cette répétition.
-- Pas de validation automatique des champs de formulaire (pas d'annotations comme
-  `@NotBlank` réellement utilisées, malgré `hibernate-validator` présent) — tout
-  est vérifié à la main.
-- Pas de gestion centralisée des erreurs : chaque Servlet fait son propre
+**Limites connues** :
+- Code répétitif d'une Servlet à l'autre (`parseLong`, check de session,
+  `redirectWithError`) — pas de filtre/intercepteur commun.
+- Pas de validation déclarative (`hibernate-validator` présent mais inexploité) —
+  tout est écrit à la main.
+- Pas de gestion d'exception centralisée — chaque servlet fait son propre
   `try/catch`.
-- Pas de **transaction** (un mécanisme qui garantit que plusieurs opérations en
-  base réussissent ou échouent toutes ensemble) : quand `TacheServiceImpl.creer()`
-  enregistre une tâche PUIS une entrée d'historique, ce sont deux opérations
-  séparées. Si la deuxième échoue, la première reste quand même enregistrée — un
-  petit risque d'incohérence, acceptable à cette échelle.
+- Pas de transaction : `TacheServiceImpl.creer()` fait un `INSERT tache` puis un
+  `INSERT action` séparément — si le 2e échoue, le 1er reste commité. Risque
+  mineur, acceptable ici.
 
-**Piste d'amélioration concrète à citer à l'oral** : remplacer le contrôle de
-session copié-collé dans chaque Servlet par un `Filter` (un mécanisme Jakarta qui
-intercepte les requêtes avant qu'elles n'atteignent la Servlet) unique, appliqué à
-toutes les routes protégées.
+**Piste d'amélioration à citer à l'oral** : remplacer le check de session dupliqué
+par un `Filter` Jakarta unique sur les routes protégées.
 
 ---
 
 ## 8. Questions probables du jury + réponses courtes
 
-**Q1 — "H2 ne tiendrait pas la charge en production, pourquoi l'avoir choisi ?"**
-> Aucune installation, portable, démarrage instantané — largement suffisant pour un
-> projet étudiant avec peu d'utilisateurs en même temps. Passer à PostgreSQL
-> reviendrait à changer l'adresse de connexion et le pilote dans
-> `ConnectionManager` ; le reste ne bouge presque pas car il n'y a pas d'ORM
-> propriétaire, juste du SQL classique.
+**Q1 — "H2 ne tiendrait pas la charge en prod, pourquoi l'avoir choisi ?"**
+> Zéro install, portable, démarrage instantané — adapté à un projet étudiant avec
+> peu d'utilisateurs simultanés. Migration PostgreSQL = changer URL + driver dans
+> `ConnectionManager` ; pas d'ORM propriétaire, donc peu d'impact ailleurs.
 
-**Q2 — "Où sont vos clés Stripe/Gmail, elles ne sont pas dans le code ?"**
-> Dans un fichier `.env`, jamais envoyé sur GitHub (explicitement exclu dans
-> `.gitignore`). Un fichier `.env.example` montre quelles clés sont attendues,
-> avec des valeurs bidons. En déploiement, le code sait aussi lire une variable
-> système en remplacement.
+**Q2 — "Où sont vos clés Stripe/Gmail ?"**
+> Dans `.env`, exclu de `.gitignore`, jamais commité. `.env.example` documente les
+> clés attendues avec des valeurs bidons. Fallback en variable système au
+> déploiement.
 
 **Q3 — "Pourquoi pas Spring Boot ?"**
-> Contrainte pédagogique : comprendre comment une requête HTTP est traitée et
-> comment les couches s'articulent, sans que le framework le fasse à notre place.
-> `ServiceFactory` joue le rôle d'un conteneur qui fournit les objets, les
-> `ServletContextListener` remplacent la configuration automatique au démarrage.
+> Contrainte pédagogique : comprendre le cycle de requête et l'assemblage des
+> couches sans que le framework le fasse à notre place. `ServiceFactory` = IoC
+> maison, `ServletContextListener` = config au démarrage.
 
-**Q4 — "Le paiement Stripe, c'est vraiment fiable ?"**
-> C'est une page de paiement hébergée par Stripe, en mode test — aucune donnée de
-> carte ne transite par notre serveur. Limite assumée : pas de notification
-> automatique (webhook) de Stripe vers nous, la confirmation se fait seulement au
-> retour du navigateur. Si l'utilisateur ferme l'onglet juste après avoir payé,
-> Stripe a bien encaissé, mais le tableau n'est jamais créé côté application.
+**Q4 — "Le paiement Stripe, c'est fiable ?"**
+> Checkout hébergé par Stripe, mode test — aucune donnée carte ne transite par
+> notre serveur. Limite assumée : pas de webhook signé, confirmation seulement au
+> retour de redirection. Si l'utilisateur ferme l'onglet après paiement, Stripe a
+> encaissé mais le tableau n'est jamais créé côté appli.
 
 **Q5 — "Comment testez-vous l'application ?"**
-> Avec JUnit 5 et Mockito. Des tests qui vérifient la logique métier avec une base
-> de données simulée (ex. `TacheServiceTest`), et des tests qui vérifient l'accès
-> aux données contre la vraie base H2 (ex. `TacheRepositoryTest`). Tous passent
-> avec `mvn test`. Il n'y a pas de tests automatiques qui simulent un vrai
-> navigateur cliquant sur les pages.
+> JUnit 5 + Mockito. Tests unitaires services (repo mocké, ex. `TacheServiceTest`),
+> tests d'intégration repositories contre le vrai H2 (ex. `TacheRepositoryTest`).
+> Tous verts via `mvn test`. Pas de tests end-to-end HTTP.
 
 **Q6 — "Comment gérez-vous les erreurs ?"**
-> Pas de mécanisme central : chaque Servlet attrape elle-même les erreurs métier
-> et redirige avec un message d'erreur glissé dans l'URL, affiché ensuite par la
-> page. Les erreurs techniques imprévues (ex. un problème SQL) sont notées dans
-> les logs et remontent jusqu'à une page d'erreur générique de Tomcat — pas de
-> page d'erreur personnalisée.
+> Pas de gestionnaire centralisé. Chaque servlet attrape `IllegalArgumentException`
+> et redirige avec un message encodé en query param, affiché ensuite côté template
+> (`th:if="${error}"`). Erreurs techniques loggées en Log4j2, remontent en
+> `RuntimeException` → page d'erreur Tomcat par défaut.
 
-**Q7 — "Vous avez pensé à la sécurité (injection SQL, XSS) ?"**
-> Oui : toutes les requêtes SQL sont préparées (donc pas d'injection possible),
-> Thymeleaf échappe automatiquement ce qu'il affiche (donc pas de XSS), et les
-> mots de passe sont hachés avec un sel aléatoire. Limites assumées : pas de
-> protection contre le CSRF, pas de vérification fine de qui a le droit de voir
-> quel tableau.
+**Q7 — "Sécurité : injection SQL, XSS ?"**
+> SQL 100% préparé, pas d'injection possible. Thymeleaf échappe par défaut, pas de
+> XSS. Mots de passe hashés PBKDF2 + sel. Limites assumées : pas de CSRF, pas de
+> vérification fine des droits d'accès.
 
-**Q8 — "Pourquoi Thymeleaf plutôt qu'une API + un front JavaScript séparé ?"**
-> Le rendu se fait côté serveur, donc pas besoin de gérer un projet front en plus
-> pour ce périmètre. Les quelques interactions qui doivent être immédiates (comme
-> déplacer une tâche) passent par un simple appel `fetch()` ciblé, sans réécrire
-> toute l'application en JavaScript.
+**Q8 — "Pourquoi Thymeleaf plutôt qu'une API + front séparé ?"**
+> Rendu serveur simple, pas de build front à gérer pour ce périmètre. Les rares
+> interactions immédiates (drag & drop) passent par un `fetch()` ciblé.
 
-**Q9 — "Il n'y a pas de code mort ou de doublons dans le projet ?"**
-> Il y en a eu : un tout premier prototype d'inscription (mot de passe en clair,
-> données jamais sauvegardées) coexistait avec le vrai système (mot de passe
-> haché, sauvegardé en base), et deux vieilles pages essayaient d'afficher un
-> template qui n'existait plus. Ce code n'était relié à aucun lien visible dans
-> l'application — il a été repéré puis supprimé. Aujourd'hui, il n'y a qu'un seul
-> chemin d'inscription/connexion : `/register` et `/login`.
+**Q9 — "Il n'y a pas de code mort dans le projet ?"**
+> Il y en a eu : un premier prototype d'inscription (mot de passe en clair, jamais
+> persisté) coexistait avec le vrai système (mot de passe haché, persisté), et
+> deux servlets rendaient un template supprimé. Non liés dans l'UI, repérés puis
+> supprimés. Aujourd'hui : un seul chemin, `/register` + `/login`.
