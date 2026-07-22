@@ -9,47 +9,67 @@ import org.junit.jupiter.api.Test;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UtilisateurRepositoryTest {
 
     private IUtilisateurRepository repository;
+    /**
+     * IDs des utilisateurs créés par les tests. Permet un @AfterEach ciblé
+     * qui ne supprime que les lignes créées par CE test, évitant toute
+     * interférence avec d'autres suites de tests exécutées en parallèle.
+     */
+    private final List<Long> createdIds = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
         repository = new UtilisateurRepositoryImpl();
+        createdIds.clear();
     }
 
     @AfterEach
     void tearDown() throws SQLException {
+        if (createdIds.isEmpty()) return;
+        String ids = createdIds.stream().map(String::valueOf).collect(Collectors.joining(","));
         try (Connection conn = ConnectionManager.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DELETE FROM utilisateur");
+            stmt.executeUpdate("DELETE FROM utilisateur_tableau WHERE utilisateur_id IN (" + ids + ")");
+            stmt.executeUpdate("DELETE FROM utilisateur WHERE id IN (" + ids + ")");
         }
     }
 
+    /** Sauvegarde et enregistre l'ID pour le nettoyage automatique. */
+    private Utilisateur saveAndTrack(Utilisateur utilisateur) {
+        Utilisateur saved = repository.save(utilisateur);
+        createdIds.add(saved.getId());
+        return saved;
+    }
+
     @Test
-    void testSaveUtilisateur() {
-        String email = "test@email.com";
-        Utilisateur nouvelUtilisateur = Utilisateur.builder()
-                .pseudo("test_pseudo")
+    void testSave_shouldPersistUserAndReturnWithId() {
+        String email = "save_test@email.com";
+        Utilisateur utilisateur = Utilisateur.builder()
+                .pseudo("save_test_pseudo")
                 .email(email)
                 .password("password123")
                 .build();
 
-        repository.save(nouvelUtilisateur);
+        Utilisateur saved = saveAndTrack(utilisateur);
 
-        Optional<Utilisateur> saved = repository.findByEmail(email);
-        assertTrue(saved.isPresent(), "L'utilisateur aurait dû être trouvé dans la base.");
-        assertEquals("test_pseudo", saved.get().getPseudo());
+        Optional<Utilisateur> found = repository.findByEmail(email);
+        assertTrue(found.isPresent(), "L'utilisateur aurait dû être trouvé dans la base.");
+        assertEquals("save_test_pseudo", found.get().getPseudo());
+        assertNotNull(saved.getId(), "L'ID aurait dû être généré.");
     }
 
     @Test
     void testFindByEmail_whenUserExists_shouldReturnUser() {
-        repository.save(Utilisateur.builder().pseudo("find_me").email("find@email.com").password("password").build());
+        saveAndTrack(Utilisateur.builder().pseudo("find_me").email("find@email.com").password("password").build());
 
         Optional<Utilisateur> result = repository.findByEmail("find@email.com");
 
@@ -61,7 +81,7 @@ class UtilisateurRepositoryTest {
     @Test
     void testFindByPseudo_whenUserExists_shouldReturnUser() {
         String pseudo = "find_me_by_pseudo";
-        repository.save(Utilisateur.builder().pseudo(pseudo).email("find_pseudo@email.com").password("password123").build());
+        saveAndTrack(Utilisateur.builder().pseudo(pseudo).email("find_pseudo@email.com").password("password123").build());
 
         Optional<Utilisateur> result = repository.findByPseudo(pseudo);
 
@@ -71,43 +91,45 @@ class UtilisateurRepositoryTest {
 
     @Test
     void testFindByEmail_whenUserDoesNotExist_shouldReturnEmpty() {
-        Optional<Utilisateur> result = repository.findByEmail("nonexistent@email.com");
+        Optional<Utilisateur> result = repository.findByEmail("nonexistent_ut@email.com");
 
         assertTrue(result.isEmpty(), "La méthode aurait dû retourner un Optional vide.");
     }
 
     @Test
-    void testFindAll_whenMultipleUsersExist_shouldReturnAllUsers() {
-        repository.save(Utilisateur.builder().pseudo("user1").email("user1@email.com").password("pass1").build());
-        repository.save(Utilisateur.builder().pseudo("user2").email("user2@email.com").password("pass2").build());
+    void testFindAll_whenMultipleUsersExist_shouldReturnAtLeastCreatedUsers() {
+        saveAndTrack(Utilisateur.builder().pseudo("ut_user1").email("ut_user1@email.com").password("pass1").build());
+        saveAndTrack(Utilisateur.builder().pseudo("ut_user2").email("ut_user2@email.com").password("pass2").build());
 
         List<Utilisateur> utilisateurs = repository.findAll();
 
-        assertEquals(2, utilisateurs.size(), "La liste devrait contenir 2 utilisateurs.");
+        // On vérifie qu'au moins les 2 utilisateurs créés sont présents (la base peut en contenir d'autres)
+        assertTrue(utilisateurs.size() >= 2, "La liste devrait contenir au moins 2 utilisateurs.");
+        assertTrue(utilisateurs.stream().anyMatch(u -> "ut_user1".equals(u.getPseudo())));
+        assertTrue(utilisateurs.stream().anyMatch(u -> "ut_user2".equals(u.getPseudo())));
     }
 
     @Test
     void testUpdate_shouldModifyUserInDatabase() {
-        String email = "update@email.com";
-        repository.save(Utilisateur.builder().pseudo("pseudo_original").email(email).password("pass").build());
+        Utilisateur saved = saveAndTrack(
+                Utilisateur.builder().pseudo("pseudo_original").email("update@email.com").password("pass").build());
 
-        Utilisateur toUpdate = repository.findByEmail(email).orElseThrow();
-        toUpdate.setPseudo("pseudo_modifie");
-        repository.update(toUpdate);
+        saved.setPseudo("pseudo_modifie");
+        repository.update(saved);
 
-        Utilisateur updated = repository.findByEmail(email).orElseThrow();
+        Utilisateur updated = repository.findByEmail("update@email.com").orElseThrow();
         assertEquals("pseudo_modifie", updated.getPseudo(), "Le pseudo aurait dû être mis à jour.");
     }
 
     @Test
     void testDelete_shouldRemoveUserFromDatabase() {
-        String email = "delete@email.com";
-        repository.save(Utilisateur.builder().pseudo("to_delete").email(email).password("pass").build());
+        Utilisateur saved = saveAndTrack(
+                Utilisateur.builder().pseudo("to_delete").email("delete@email.com").password("pass").build());
 
-        Utilisateur toDelete = repository.findByEmail(email).orElseThrow();
-        repository.delete(toDelete.getId());
+        repository.delete(saved.getId());
+        createdIds.remove(saved.getId()); // déjà supprimé, inutile de le supprimer dans tearDown
 
-        Optional<Utilisateur> deleted = repository.findByEmail(email);
+        Optional<Utilisateur> deleted = repository.findByEmail("delete@email.com");
         assertTrue(deleted.isEmpty(), "L'utilisateur aurait dû être supprimé de la base.");
     }
 }

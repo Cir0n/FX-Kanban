@@ -63,7 +63,7 @@ class TacheRepositoryTest {
     }
 
     @Test
-    void testSaveTache() {
+    void testSave_shouldPersistTaskWithGeneratedId() {
         Tache tache = Tache.builder()
                 .name("Corriger le bug d'affichage")
                 .description("Le bouton est mal aligné sur la page d'accueil.")
@@ -85,18 +85,23 @@ class TacheRepositoryTest {
     }
 
     @Test
-    void testFindAll_shouldReturnAllSavedTasks() {
+    void testFindByColonneId_shouldReturnOnlyScopedTasks() {
+        // Arrange : 2 tâches dans colonneId1, 1 dans colonneId2
         tacheRepository.save(Tache.builder().name("Tache 1").description("Desc 1").colonneId(colonneId1).typeId(1L).createdBy(utilisateurId).build());
         tacheRepository.save(Tache.builder().name("Tache 2").description("Desc 2").colonneId(colonneId1).typeId(1L).createdBy(utilisateurId).build());
+        tacheRepository.save(Tache.builder().name("Tache 3").description("Desc 3").colonneId(colonneId2).typeId(1L).createdBy(utilisateurId).build());
 
-        List<Tache> taches = tacheRepository.findAll();
+        // Act
+        List<Tache> tachesColonne1 = tacheRepository.findByColonneId(colonneId1);
+        List<Tache> tachesColonne2 = tacheRepository.findByColonneId(colonneId2);
 
-        assertNotNull(taches);
-        assertEquals(2, taches.size(), "La méthode findAll devrait retourner 2 tâches.");
+        // Assert : findByColonneId est scopé → pas de pollution par d'autres données en base
+        assertEquals(2, tachesColonne1.size(), "colonneId1 devrait contenir exactement 2 tâches.");
+        assertEquals(1, tachesColonne2.size(), "colonneId2 devrait contenir exactement 1 tâche.");
     }
 
     @Test
-    void testUpdateTache_shouldChangeColumn() {
+    void testUpdate_shouldChangeColumn() {
         Tache tache = tacheRepository.save(
                 Tache.builder().name("Tâche à déplacer").description("Desc").colonneId(colonneId1).typeId(1L).createdBy(utilisateurId).build()
         );
@@ -109,7 +114,7 @@ class TacheRepositoryTest {
     }
 
     @Test
-    void testDeleteTache_shouldRemoveTaskFromDatabase() {
+    void testDelete_shouldRemoveTaskFromDatabase() {
         Tache tache = tacheRepository.save(
                 Tache.builder().name("Tâche à supprimer").description("Desc").colonneId(colonneId1).typeId(1L).createdBy(utilisateurId).build()
         );
