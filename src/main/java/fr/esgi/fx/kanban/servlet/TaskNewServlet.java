@@ -43,7 +43,7 @@ public class TaskNewServlet extends HttpServlet {
         String description = request.getParameter("description");
         String type = request.getParameter("type");
 
-        // Le nom et la colonne cible sont requis (la validation client de kanban.js
+        // Le nom et la colonne cible sont requis (la validation client de board.js
         // empêche déjà l'envoi d'un nom vide).
         if (name == null || name.trim().isEmpty() || colonneId == 0L) {
             response.sendRedirect(request.getContextPath() + "/board?id=" + boardId);
