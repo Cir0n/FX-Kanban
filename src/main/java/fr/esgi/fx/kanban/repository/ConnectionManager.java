@@ -45,10 +45,16 @@ public final class ConnectionManager {
     private static final String PASSWORD =
             resolve("DB_PASSWORD", "db.password", DEFAULT_PASSWORD);
 
+    // Reflète le profil Maven actif (dev/preprod/prod) au moment du build ; n'est
+    // pas fiable si un .env local force DB_URL vers un autre fichier (voir resolve()).
+    private static final String ENV =
+            DB_PROPERTIES.getProperty("db.env", "inconnu");
+
     // Sous Tomcat, le driver H2 (WEB-INF/lib) est chargé par le classloader isolé du
     // webapp ; l'auto-enregistrement via ServiceLoader ne l'expose pas à DriverManager
     // (chargé par le classloader système). On force donc son enregistrement ici.
     static {
+        LOGGER.info("Base de données : environnement Maven={}, url={}", ENV, URL);
         try {
             Class.forName("org.h2.Driver");
         } catch (ClassNotFoundException e) {

@@ -22,3 +22,13 @@
 - Chargement via `dotenv-java`, avec repli sur une variable d'environnement système en déploiement (pas de dépendance dure au fichier `.env`)
 - **Limite assumée** : un fichier `.env` n'est pas un vrai coffre-fort à secrets — pas de rotation, pas de chiffrement au repos, pas d'audit d'accès
 - **Évolution envisagée** : migrer vers un gestionnaire de secrets dédié (HashiCorp Vault, AWS/Azure Secrets Manager) pour la rotation automatique, le chiffrement et la traçabilité des accès en production
+
+## Journalisation (Log4j2)
+- **Logger structuré par classe** : chaque classe critique déclare son propre `Logger` (`LogManager.getLogger(MaClasse.class)`) plutôt que des `System.out.println` — permet de filtrer/tracer par origine
+- **Niveaux utilisés à bon escient** : `INFO` pour une étape de démarrage réussie (`DatabaseConfiguration` : "Schéma initialisé avec succès"), `WARN` pour une dégradation gracieuse non bloquante (SMTP absent → notifications désactivées, `EmailServiceImpl`), `ERROR`/`FATAL` pour un échec réel (driver H2 introuvable, échec du paiement Stripe)
+- **Double sortie configurée** (`log4j2.xml`) : console (dev) + fichier `logs/kanban.log`, avec rotation quotidienne et par taille (10 MB), 10 fichiers `.gz` conservés — pas de perte silencieuse des logs en fonctionnement prolongé
+- **Logger applicatif isolé** (`fr.esgi.fx.kanban` en `DEBUG`, `additivity="false"`) séparé du `Root` (`INFO`) : le bruit des libs tierces (Thymeleaf, H2, Stripe SDK) ne noie pas les logs métier
+- **Ajout concret pendant le projet** : confusion réelle vécue en dev entre les 3 fichiers H2 (dev/preprod/prod) et leur emplacement selon le process qui démarre l'appli → `ConnectionManager` logge désormais l'environnement Maven actif et l'URL JDBC résolue au démarrage, pour lever toute ambiguïté sans avoir à inspecter le classpath
+- **Aucun secret loggé** : mot de passe, clé Stripe, identifiants SMTP jamais écrits dans les logs (seulement leur statut configuré/absent)
+
+- **Limite assumée** : pas de corrélation par requête (pas de `MDC`/request-id) — impossible de retracer tous les logs d'une même requête HTTP dans un fichier à fort trafic. Logs uniquement locaux au fichier, pas d'agrégation centralisée (ELK, Grafana Loki) envisageable en prod multi-instance.
