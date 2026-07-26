@@ -115,6 +115,7 @@ public class BoardServlet extends HttpServlet {
         context.setVariable("membres", membres(tableau.getId()));
         context.setVariable("colonnes", colonnes(tableau.getId(), utilisateurs));
         context.setVariable("created", "1".equals(request.getParameter("created")));
+        context.setVariable("boardCreated", "1".equals(request.getParameter("boardCreated")));
         context.setVariable("invited", "1".equals(request.getParameter("invited")));
         context.setVariable("updated", "1".equals(request.getParameter("updated")));
         context.setVariable("deleted", "1".equals(request.getParameter("deleted")));

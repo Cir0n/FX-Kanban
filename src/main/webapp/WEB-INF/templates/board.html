@@ -35,6 +35,7 @@
     <a th:href="@{/dashboard}" class="back-link">← Mes tableaux</a>
 
     <!-- Messages de confirmation / erreur -->
+    <div th:if="${boardCreated}" class="alert-success">Le tableau a bien été créé.</div>
     <div th:if="${created}" class="alert-success">La tâche a bien été ajoutée.</div>
     <div th:if="${updated}" class="alert-success">La tâche a bien été modifiée.</div>
     <div th:if="${deleted}" class="alert-success">La tâche a bien été supprimée.</div>

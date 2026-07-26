@@ -111,6 +111,7 @@ class BoardServletTest {
         when(session.getAttribute("user")).thenReturn("owner.user");
         when(request.getParameter("id")).thenReturn("5");
         when(request.getParameter("created")).thenReturn(paramCreated);
+        when(request.getParameter("boardCreated")).thenReturn(null);
         when(request.getParameter("invited")).thenReturn(paramInvited);
         when(request.getParameter("updated")).thenReturn(paramUpdated);
         when(request.getParameter("deleted")).thenReturn(paramDeleted);

@@ -195,7 +195,7 @@ public class BoardNewServlet extends HttpServlet {
             colonneService.creer(colonne, position++, tableau.getId());
         }
 
-        response.sendRedirect(request.getContextPath() + "/board?id=" + tableau.getId() + "&created=1");
+        response.sendRedirect(request.getContextPath() + "/board?id=" + tableau.getId() + "&boardCreated=1");
     }
 
     /** Paiement annulé : on oublie le tableau en attente et on revient au formulaire. */

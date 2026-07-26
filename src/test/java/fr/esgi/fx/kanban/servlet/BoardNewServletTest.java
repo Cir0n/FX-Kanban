@@ -151,7 +151,7 @@ class BoardNewServletTest {
         verify(colonneService).creer("En cours", 2, 42L);
         verify(colonneService).creer("En revue", 3, 42L);
         verify(colonneService).creer("Terminé", 4, 42L);
-        verify(response).sendRedirect("/app/board?id=42&created=1");
+        verify(response).sendRedirect("/app/board?id=42&boardCreated=1");
     }
 
     @Test
