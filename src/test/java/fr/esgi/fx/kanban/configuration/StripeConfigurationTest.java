@@ -39,28 +39,16 @@ public class StripeConfigurationTest {
     }
 
     @Test
-    void testContextInitialized_whenApiKeyIsNotConfigured_shouldNotSetAttribute() {
-        // Arrange
-        ServletContextEvent mockEvent = mock(ServletContextEvent.class);
-
-        // Act
-        stripeConfiguration.contextInitialized(mockEvent);
-
-        // Assert
-        // Sans clé API, l'initialisation s'arrête avant d'accéder au ServletContext.
-        verify(mockEvent, never()).getServletContext();
-    }
-
-    @Test
     void testContextInitialized_whenApiKeyIsConfigured_shouldInitializeService() {
         // Arrange
+        StripeConfiguration spyConfiguration = spy(stripeConfiguration);
+        doReturn("sk_test_123456789").when(spyConfiguration).resolveApiKey();
         ServletContextEvent mockEvent = mock(ServletContextEvent.class);
         ServletContext mockContext = mock(ServletContext.class);
         when(mockEvent.getServletContext()).thenReturn(mockContext);
-        System.setProperty("stripe.api.key", "sk_test_123456789");
 
         // Act
-        stripeConfiguration.contextInitialized(mockEvent);
+        spyConfiguration.contextInitialized(mockEvent);
 
         // Assert
         verify(mockContext, times(1)).setAttribute(
@@ -70,13 +58,29 @@ public class StripeConfigurationTest {
     }
 
     @Test
-    void testContextInitialized_withBlankApiKey_shouldNotSetAttribute() {
+    void testContextInitialized_whenApiKeyIsNotConfigured_shouldNotSetAttribute() {
         // Arrange
+        StripeConfiguration spyConfiguration = spy(stripeConfiguration);
+        doReturn(null).when(spyConfiguration).resolveApiKey();
         ServletContextEvent mockEvent = mock(ServletContextEvent.class);
-        System.setProperty("stripe.api.key", "   ");
 
         // Act
-        stripeConfiguration.contextInitialized(mockEvent);
+        spyConfiguration.contextInitialized(mockEvent);
+
+        // Assert
+        // Sans clé API, l'initialisation s'arrête avant d'accéder au ServletContext.
+        verify(mockEvent, never()).getServletContext();
+    }
+
+    @Test
+    void testContextInitialized_withBlankApiKey_shouldNotSetAttribute() {
+        // Arrange
+        StripeConfiguration spyConfiguration = spy(stripeConfiguration);
+        doReturn("   ").when(spyConfiguration).resolveApiKey();
+        ServletContextEvent mockEvent = mock(ServletContextEvent.class);
+
+        // Act
+        spyConfiguration.contextInitialized(mockEvent);
 
         // Assert : la clé vide est rejetée avant d'accéder au ServletContext
         verify(mockEvent, never()).getServletContext();

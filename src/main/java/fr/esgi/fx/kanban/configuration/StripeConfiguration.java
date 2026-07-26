@@ -27,6 +27,27 @@ public class StripeConfiguration implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        String apiKey = resolveApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
+            LOGGER.warn("Aucune clé API Stripe configurée. "
+                    + "Définissez la variable STRIPE_API_KEY dans .env, "
+                    + "ou la propriété système -Dstripe.api.key=sk_test_...");
+            return;
+        }
+
+        IStripeService stripeService = new StripeServiceImpl(apiKey);
+        sce.getServletContext().setAttribute(STRIPE_SERVICE_CONTEXT_KEY, stripeService);
+        LOGGER.info("Service Stripe initialisé avec succès.");
+    }
+
+    /**
+     * Isolée dans sa propre méthode (plutôt qu'inline dans contextInitialized) pour
+     * pouvoir être mockée en test : dès qu'une vraie variable d'environnement
+     * STRIPE_API_KEY est présente sur la machine (cas courant en dev), Dotenv la
+     * retrouve et rend impossible de simuler le cas "aucune clé configurée" via
+     * clearProperty/.env seuls.
+     */
+    protected String resolveApiKey() {
         // ignoreIfMissing : en déploiement (Tomcat) il n'y a pas de .env, on ne doit
         // pas faire échouer le démarrage de l'application pour autant.
         Dotenv dotenv = Dotenv.configure()
@@ -38,16 +59,7 @@ public class StripeConfiguration implements ServletContextListener {
         if (apiKey == null || apiKey.isBlank()) {
             apiKey = System.getProperty("stripe.api.key");
         }
-        if (apiKey == null || apiKey.isBlank()) {
-            LOGGER.warn("Aucune clé API Stripe configurée. "
-                    + "Définissez la variable STRIPE_API_KEY dans .env, "
-                    + "ou la propriété système -Dstripe.api.key=sk_test_...");
-            return;
-        }
-
-        IStripeService stripeService = new StripeServiceImpl(apiKey);
-        sce.getServletContext().setAttribute(STRIPE_SERVICE_CONTEXT_KEY, stripeService);
-        LOGGER.info("Service Stripe initialisé avec succès.");
+        return apiKey;
     }
 
     @Override
